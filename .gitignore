@@ -1,0 +1,4 @@
+*.txt
+.codex
+.session
+*.out
