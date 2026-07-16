@@ -179,7 +179,7 @@ static int sumaMano(Mano mano) {
     return cuenta; // Return the calculated sum
 }
 
-static int clavePunto(Mano mano) {
+static int claveJuego(Mano mano) {
     int valor = sumaMano(mano);
     for (int i = 0; i < 8; i++)
         if (valor == ORDEN_PUNTO[i])
@@ -187,16 +187,127 @@ static int clavePunto(Mano mano) {
     return -1;
 }
 
-int ganadorPunto(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
-    int max = clavePunto(manos[mano]);
+int ganadorJuego(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
+    int max = claveJuego(manos[mano]);
     int ganador = mano;
     for (size_t i = 0; i < NUMERO_JUGADORES_MUS; i++) {
         int j = (mano + i) % NUMERO_JUGADORES_MUS;
-        int valor = clavePunto(manos[j]);
+        int valor = claveJuego(manos[j]);
         if (valor > max) {
             max = valor;
             ganador = j;
         }
     }
     return ganador;
+}
+
+int iniciarPartidaMus(PartidaMus *partida) {
+    if (partida == NULL)
+        return 1;
+    Baraja baraja = {0};
+    if (crearBarajaEspanola40(&baraja))
+        return 1;
+    partida->baraja = baraja;
+    Baraja descartes = {0};
+    if (crearBarajaEspanola40(&descartes))
+        return 1;
+    partida->descartes = descartes;
+    Mano mano1 = {0};
+    if (crearMano(&mano1, TAMANO_MANO_MUS))
+        return 1;
+    partida->manos[0] = mano1;
+    Mano mano2 = {0};
+    if (crearMano(&mano2, TAMANO_MANO_MUS))
+        return 1;
+    partida->manos[1] = mano2;
+    Mano mano3 = {0};
+    if (crearMano(&mano3, TAMANO_MANO_MUS))
+        return 1;
+    partida->manos[2] = mano3;
+    Mano mano4 = {0};
+    if (crearMano(&mano4, TAMANO_MANO_MUS))
+        return 1;
+    partida->manos[3] = mano4;
+    partida->tantos[0] = 0;
+    partida->tantos[1] = 0;
+    partida->mano = 0;
+    return 0;
+}
+
+int destruirPartidaMus(PartidaMus *partida) {
+    if (partida == NULL)
+        return 1;
+    if (destruirBaraja(&partida->baraja))
+        return 1;
+    if (destruirBaraja(&partida->descartes))
+        return 1;
+    for (size_t i = 0; i < NUMERO_JUGADORES_MUS; i++)
+        if (destruirMano(&partida->manos[i]))
+            return 1;
+    partida->tantos[0] = 0;
+    partida->tantos[1] = 0;
+    partida->mano = 0;
+    return 0;
+}
+
+int barajarDescartes(PartidaMus *partida) {
+    if (partida == NULL)
+        return 1;
+    for (size_t i = 0; i < partida->descartes.siguiente_carta; i++)
+        partida->baraja.cartas[i] = partida->descartes.cartas[i];
+    partida->baraja.tamano = partida->descartes.siguiente_carta;
+    if (barajar(&(partida->baraja)))
+        return 1;
+    partida->descartes.siguiente_carta = 0;
+    partida->baraja.siguiente_carta = 0;
+    return 0;
+}
+
+static int repartirMano(PartidaMus *partida, Mano *mano) {
+    if (partida == NULL)
+        return 1;
+    if (mano == NULL)
+        return 1;
+    for (size_t i = 0; i < mano->tamano; i++) {
+        mano->cartas[i].numero =
+            partida->baraja.cartas[partida->baraja.siguiente_carta].numero;
+        mano->cartas[i].palo =
+            partida->baraja.cartas[partida->baraja.siguiente_carta].palo;
+        partida->baraja.siguiente_carta += 1;
+        if (partida->baraja.siguiente_carta == partida->baraja.tamano)
+            if (barajarDescartes(partida))
+                return 1;
+    }
+    return 0;
+}
+
+int repartirManos(PartidaMus *partida) {
+    if (partida == NULL)
+        return 1;
+    for (size_t i = 0; i < NUMERO_JUGADORES_MUS; i++)
+        if (repartirMano(partida, &(partida->manos[i])))
+            return 1;
+    return 0;
+}
+
+int manoSeDescarta(PartidaMus *partida, Mano *mano,
+                   int descartadas[TAMANO_MANO_MUS]) {
+    if (partida == NULL)
+        return 1;
+    if (mano == NULL)
+        return 1;
+    for (size_t i = 0; i < TAMANO_MANO_MUS; i++) {
+        if (descartadas[i]) {
+            partida->descartes.cartas[partida->descartes.siguiente_carta] =
+                mano->cartas[i];
+            partida->descartes.siguiente_carta += 1;
+            mano->cartas[i] =
+                partida->baraja.cartas[partida->baraja.siguiente_carta];
+            partida->baraja.siguiente_carta += 1;
+            if (partida->baraja.siguiente_carta == partida->baraja.tamano)
+                if (barajarDescartes(partida))
+                    return 1;
+        }
+    }
+    return 0;
 }

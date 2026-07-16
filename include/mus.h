@@ -21,6 +21,14 @@ typedef enum {
 
 enum { NO_PAR, PAR, MEDIAS, DUPLEX };
 
+typedef struct {
+    Baraja baraja;
+    Baraja descartes;
+    Mano manos[NUMERO_JUGADORES_MUS];
+    int tantos[2];
+    int mano;
+} PartidaMus;
+
 int crearManoMus(Mano *mano);
 
 int ganadorGrande(Mano manos[NUMERO_JUGADORES_MUS], int mano);
@@ -29,6 +37,17 @@ int ganadorChica(Mano manos[NUMERO_JUGADORES_MUS], int mano);
 
 int ganadorPar(Mano manos[NUMERO_JUGADORES_MUS], int mano);
 
-int ganadorPunto(Mano manos[NUMERO_JUGADORES_MUS], int mano);
+int ganadorJuego(Mano manos[NUMERO_JUGADORES_MUS], int mano);
+
+int iniciarPartidaMus(PartidaMus *partida);
+
+int destruirPartidaMus(PartidaMus *partida);
+
+int barajarDescartes(PartidaMus *partida);
+
+int repartirManos(PartidaMus *partida);
+
+int manoSeDescarta(PartidaMus *partida, Mano *mano,
+                   int descartadas[TAMANO_MANO_MUS]);
 
 #endif
