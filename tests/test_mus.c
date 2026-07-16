@@ -145,7 +145,7 @@ static void testPunto(void) {
         manoDe(REY, REY, SOTA, CABALLO),   // 40
         manoDe(REY, REY, REY, SIETE),      // 37
     };
-    VERIFICAR(ganadorPunto(manos, 0) == 1);
+    VERIFICAR(ganadorJuego(manos, 0) == 1);
     liberarManos(manos);
 
     // Tras el 31 y el 32, manda el 40 y luego de 37 hacia abajo
@@ -155,7 +155,7 @@ static void testPunto(void) {
         manoDe(REY, REY, SOTA, CABALLO),   // 40
         manoDe(REY, REY, SEIS, SEIS),      // 32
     };
-    VERIFICAR(ganadorPunto(manos2, 0) == 3);
+    VERIFICAR(ganadorJuego(manos2, 0) == 3);
     liberarManos(manos2);
 
     // En empate a 31 gana el más cercano a la mano
@@ -165,8 +165,8 @@ static void testPunto(void) {
         manoDe(AS, AS, AS, AS),            // 4, sin juego
         manoDe(REY, REY, CABALLO, DOS),    // 31
     };
-    VERIFICAR(ganadorPunto(manos3, 0) == 1);
-    VERIFICAR(ganadorPunto(manos3, 2) == 3);
+    VERIFICAR(ganadorJuego(manos3, 0) == 1);
+    VERIFICAR(ganadorJuego(manos3, 2) == 3);
     liberarManos(manos3);
 }
 
