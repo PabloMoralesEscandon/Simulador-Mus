@@ -2,3 +2,4 @@
 .codex
 .session
 *.out
+build/
