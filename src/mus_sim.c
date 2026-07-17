@@ -1,7 +1,7 @@
 #include <stdint.h>
 
 #include "baraja_espanola.h"
-#include "mus_io.h"
+#include "mus_log.h"
 #include "mus_sim.h"
 
 const ConteoMus BARAJA_MUS_COMPLETA = {.c = {8, 4, 4, 4, 4, 4, 4, 8}};
@@ -9,15 +9,10 @@ const ConteoMus BARAJA_MUS_COMPLETA = {.c = {8, 4, 4, 4, 4, 4, 4, 8}};
 static const int NUMERO_ESPANOL_DESDE_MUS[CERDO + 1] = {
     AS, CUATRO, CINCO, SEIS, SIETE, SOTA, CABALLO, REY};
 
-static int sim_verboso = 0;
-
-void fijarVerbosidadSim(int verboso) { sim_verboso = verboso; }
-
 static int puntuarLance(PartidaMus *partida, const char *lance,
                         int (*ganadorLance)(Mano[NUMERO_JUGADORES_MUS], int)) {
     int ganador = ganadorLance(partida->manos, partida->mano);
-    if (sim_verboso)
-        imprimirGanadorLance(lance, ganador);
+    logGanadorLance(LOG_LANCES, lance, ganador);
     return puntuarRonda(partida, ganador, 1);
 }
 
@@ -26,8 +21,7 @@ int simularRondaMus(PartidaMus *partida) {
         return -1;
     if (repartirManos(partida))
         return -1;
-    if (sim_verboso)
-        imprimirManos(partida);
+    logManos(LOG_LANCES, partida);
     int ganador = puntuarLance(partida, "Grande", ganadorGrande);
     if (ganador)
         return ganador;
@@ -40,8 +34,7 @@ int simularRondaMus(PartidaMus *partida) {
     ganador = puntuarLance(partida, "Juego", ganadorJuego);
     if (ganador)
         return ganador;
-    if (sim_verboso)
-        imprimirTantos(partida);
+    logTantos(LOG_RONDAS, partida);
     partida->mano = (partida->mano + 1) % NUMERO_JUGADORES_MUS;
     return 0;
 }
@@ -58,13 +51,11 @@ int simularPartidaMus() {
             return 1;
         }
         ronda += 1;
-        if (sim_verboso)
-            imprimirNumeroRonda(ronda);
+        logNumeroRonda(LOG_RONDAS, ronda);
     } while (!(ganador = simularRondaMus(&partida)));
     int resultado = 0;
     if (ganador == 1 || ganador == 2) {
-        if (sim_verboso)
-            imprimirGanadorPartida(&partida);
+        logGanadorPartida(LOG_RESULTADO, &partida);
     } else {
         resultado = 1;
     }

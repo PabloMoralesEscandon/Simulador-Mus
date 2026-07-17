@@ -1,8 +1,9 @@
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "baraja_espanola.h"
-#include "mus_io.h"
+#include "mus_log.h"
 #include "mus_sim.h"
 #include "utiles_test.h"
 
@@ -101,23 +102,77 @@ static void testProbabilidadesEntradasInvalidas(void) {
               -1.0);
 }
 
-static void testImprimirEntradasInvalidas(void) {
+static void testLogEntradasInvalidas(void) {
+    // Las entradas inválidas fallan aunque el nivel esté en silencio
+    VERIFICAR(logMus(LOG_RESULTADO, NULL) == 1);
+    VERIFICAR(logMus(LOG_SILENCIO, "nivel invalido") == 1);
+
     Mano sinCartas = {0};
-    VERIFICAR(imprimirMano(sinCartas) == 1);
-    VERIFICAR(imprimirManos(NULL) == 1);
-    VERIFICAR(imprimirNumeroRonda(0) == 1);
-    VERIFICAR(imprimirGanadorLance(NULL, 0) == 1);
-    VERIFICAR(imprimirGanadorLance("Grande", -1) == 1);
-    VERIFICAR(imprimirGanadorLance("Grande", NUMERO_JUGADORES_MUS) == 1);
-    VERIFICAR(imprimirTantos(NULL) == 1);
-    VERIFICAR(imprimirGanadorPartida(NULL) == 1);
+    VERIFICAR(logMano(LOG_LANCES, sinCartas) == 1);
+    VERIFICAR(logManos(LOG_LANCES, NULL) == 1);
+    VERIFICAR(logNumeroRonda(LOG_RONDAS, 0) == 1);
+    VERIFICAR(logGanadorLance(LOG_LANCES, NULL, 0) == 1);
+    VERIFICAR(logGanadorLance(LOG_LANCES, "Grande", -1) == 1);
+    VERIFICAR(logGanadorLance(LOG_LANCES, "Grande", NUMERO_JUGADORES_MUS) ==
+              1);
+    VERIFICAR(logTantos(LOG_RONDAS, NULL) == 1);
+    VERIFICAR(logGanadorPartida(LOG_RESULTADO, NULL) == 1);
 
     Carta invalida = {.numero = 0, .palo = 0};
-    VERIFICAR(imprimirCarta(invalida) == 1);
+    VERIFICAR(logCarta(LOG_LANCES, invalida) == 1);
 
-    // Una partida sin ganador tampoco se puede imprimir
+    // Una partida sin ganador tampoco se puede loguear
     PartidaMus sinGanador = {0};
-    VERIFICAR(imprimirGanadorPartida(&sinGanador) == 1);
+    VERIFICAR(logGanadorPartida(LOG_RESULTADO, &sinGanador) == 1);
+}
+
+static void testLogNivelesYSalida(void) {
+    VERIFICAR(obtenerNivelLog() == LOG_SILENCIO);
+
+    FILE *archivo = tmpfile();
+    VERIFICAR(archivo != NULL);
+    if (archivo == NULL)
+        return;
+    fijarSalidaLog(archivo);
+    fijarNivelLog(LOG_RONDAS);
+    VERIFICAR(obtenerNivelLog() == LOG_RONDAS);
+
+    // Solo pasan los mensajes de nivel menor o igual al configurado
+    VERIFICAR(logMus(LOG_LANCES, "oculto") == 0);
+    VERIFICAR(logMus(LOG_RONDAS, "ronda %d", 3) == 0);
+    VERIFICAR(logMus(LOG_RESULTADO, "!") == 0);
+
+    fijarNivelLog(LOG_SILENCIO);
+    fijarSalidaLog(NULL);
+
+    char contenido[64] = {0};
+    rewind(archivo);
+    fread(contenido, 1, sizeof(contenido) - 1, archivo);
+    fclose(archivo);
+    VERIFICAR(strcmp(contenido, "ronda 3!") == 0);
+}
+
+static void testLogPartidaCompleta(void) {
+    FILE *archivo = tmpfile();
+    VERIFICAR(archivo != NULL);
+    if (archivo == NULL)
+        return;
+    fijarSalidaLog(archivo);
+    fijarNivelLog(LOG_RESULTADO);
+
+    VERIFICAR(simularPartidaMus() == 0);
+
+    fijarNivelLog(LOG_SILENCIO);
+    fijarSalidaLog(NULL);
+
+    char contenido[256] = {0};
+    rewind(archivo);
+    fread(contenido, 1, sizeof(contenido) - 1, archivo);
+    fclose(archivo);
+    // A nivel resultado solo se escribe la línea del ganador
+    VERIFICAR(strstr(contenido, "Gana la pareja") == contenido + 1);
+    VERIFICAR(strstr(contenido, "Ronda") == NULL);
+    VERIFICAR(strstr(contenido, "Jugador") == NULL);
 }
 
 int main(void) {
@@ -128,6 +183,8 @@ int main(void) {
     testProbabilidadesCasosSeguros();
     testProbabilidadesRangoYMano();
     testProbabilidadesEntradasInvalidas();
-    testImprimirEntradasInvalidas();
+    testLogEntradasInvalidas();
+    testLogNivelesYSalida();
+    testLogPartidaCompleta();
     return resumenPruebas("test_mus_sim");
 }

@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -std=gnu99 -Wall -Wextra -Iinclude -g -fsanitize=address,undefined
 LDLIBS = -lm
 
-SRC = src/cartas.c src/baraja_espanola.c src/mus.c src/mus_sim.c src/mus_io.c
+SRC = src/cartas.c src/baraja_espanola.c src/mus.c src/mus_sim.c src/mus_log.c
 TESTS = build/test_cartas build/test_baraja_espanola build/test_mus build/test_partida build/test_mus_sim
 EXPERIMENTOS = build/experimento1
 
