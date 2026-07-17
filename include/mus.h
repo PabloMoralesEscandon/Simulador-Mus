@@ -31,11 +31,23 @@ typedef struct {
 
 int crearManoMus(Mano *mano);
 
+int valorMus(Carta carta);
+
+int claveGrande(Mano mano);
+
 int ganadorGrande(Mano manos[NUMERO_JUGADORES_MUS], int mano);
+
+int claveChica(Mano mano);
 
 int ganadorChica(Mano manos[NUMERO_JUGADORES_MUS], int mano);
 
+int clavePar(Mano mano);
+
 int ganadorPar(Mano manos[NUMERO_JUGADORES_MUS], int mano);
+
+int valorPuntoMus(Carta carta);
+
+int sumaMano(Mano mano);
 
 int ganadorJuego(Mano manos[NUMERO_JUGADORES_MUS], int mano);
 
@@ -45,9 +57,15 @@ int destruirPartidaMus(PartidaMus *partida);
 
 int barajarDescartes(PartidaMus *partida);
 
+int repartirMano(PartidaMus *partida, Mano *mano);
+
 int repartirManos(PartidaMus *partida);
 
 int manoSeDescarta(PartidaMus *partida, Mano *mano,
                    int descartadas[TAMANO_MANO_MUS]);
+
+int puntuarRonda(PartidaMus *partida, int ganador, int tantos);
+
+int resetearMazo(PartidaMus *partida);
 
 #endif

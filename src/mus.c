@@ -11,7 +11,7 @@ static const int ORDEN_PUNTO[8] = {33, 34, 35, 36, 37, 40, 32, 31};
 
 int crearManoMus(Mano *mano) { return crearMano(mano, TAMANO_MANO_MUS); }
 
-static int valorMus(Carta carta) {
+int valorMus(Carta carta) {
     switch (carta.numero) {
     case AS:
     case DOS:
@@ -44,7 +44,7 @@ static int valorMus(Carta carta) {
     }
 }
 
-static int claveGrande(Mano mano) {
+int claveGrande(Mano mano) {
     int clave = 0;
     for (size_t i = 0; i < mano.tamano; i++) {
         clave += PESO_GRANDE[valorMus(mano.cartas[i])];
@@ -66,7 +66,7 @@ int ganadorGrande(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
     return ganador;
 }
 
-static int claveChica(Mano mano) {
+int claveChica(Mano mano) {
     int clave = 0;
     for (size_t i = 0; i < mano.tamano; i++) {
         clave += PESO_CHICA[valorMus(mano.cartas[i])];
@@ -88,7 +88,7 @@ int ganadorChica(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
     return ganador;
 }
 
-static int clavePar(Mano mano) {
+int clavePar(Mano mano) {
     int c[CERDO + 1] = {0};
     int tipo = NO_PAR;
     int alto = 0, bajo = 0;
@@ -145,7 +145,7 @@ int ganadorPar(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
     return ganador;
 }
 
-static int valorPuntoMus(Carta carta) {
+int valorPuntoMus(Carta carta) {
     int valor = valorMus(carta);
 
     switch (valor) {
@@ -168,7 +168,7 @@ static int valorPuntoMus(Carta carta) {
     }
 }
 
-static int sumaMano(Mano mano) {
+int sumaMano(Mano mano) {
     int cuenta = 0;
 
     // Loop through each card in the hand
@@ -263,7 +263,7 @@ int barajarDescartes(PartidaMus *partida) {
     return 0;
 }
 
-static int repartirMano(PartidaMus *partida, Mano *mano) {
+int repartirMano(PartidaMus *partida, Mano *mano) {
     if (partida == NULL)
         return 1;
     if (mano == NULL)
@@ -309,5 +309,26 @@ int manoSeDescarta(PartidaMus *partida, Mano *mano,
                     return 1;
         }
     }
+    return 0;
+}
+
+int puntuarRonda(PartidaMus *partida, int ganador, int tantos) {
+    if (ganador == 0 || ganador == 2) {
+        partida->tantos[0] += tantos;
+        if (partida->tantos[0] >= 40)
+            return 1;
+    } else {
+        partida->tantos[1] += tantos;
+        if (partida->tantos[1] >= 40)
+            return 2;
+    }
+    return 0;
+}
+
+int resetearMazo(PartidaMus *partida) {
+    if (partida == NULL)
+        return 1;
+    barajar(&(partida->baraja));
+    partida->baraja.siguiente_carta = 0;
     return 0;
 }
