@@ -170,11 +170,57 @@ static void testPunto(void) {
     liberarManos(manos3);
 }
 
+static void testGanadorPunto(void) {
+    // Gana la suma más alta
+    Mano manos[NUMERO_JUGADORES_MUS] = {
+        manoDe(AS, AS, AS, AS),             // 4
+        manoDe(REY, SOTA, CINCO, CUATRO),   // 29
+        manoDe(REY, SOTA, SEIS, CUATRO),    // 30
+        manoDe(CABALLO, SOTA, SIETE, AS),   // 28
+    };
+    VERIFICAR(ganadorPunto(manos, 0) == 2);
+    liberarManos(manos);
+
+    // En empate gana el más cercano a la mano
+    Mano manos2[NUMERO_JUGADORES_MUS] = {
+        manoDe(AS, AS, AS, AS),               // 4
+        manoDe(REY, SOTA, SEIS, CUATRO),      // 30
+        manoDe(DOS, DOS, DOS, DOS),           // 4
+        manoDe(SOTA, CABALLO, SEIS, CUATRO),  // 30
+    };
+    VERIFICAR(ganadorPunto(manos2, 0) == 1);
+    VERIFICAR(ganadorPunto(manos2, 2) == 3);
+    VERIFICAR(ganadorPunto(manos2, 3) == 3);
+    liberarManos(manos2);
+
+    // Si nadie tiene juego, el lance de juego se decide al punto
+    Mano manos3[NUMERO_JUGADORES_MUS] = {
+        manoDe(AS, AS, AS, AS),            // 4
+        manoDe(REY, SOTA, SEIS, CUATRO),   // 30
+        manoDe(SIETE, SEIS, CINCO, AS),    // 19
+        manoDe(DOS, DOS, DOS, DOS),        // 4
+    };
+    VERIFICAR(ganadorJuego(manos3, 0) == 1);
+    VERIFICAR(ganadorJuego(manos3, 2) == 1);
+    liberarManos(manos3);
+
+    // Cualquier juego (aunque sea 33, el peor) gana a las manos sin juego
+    Mano manos4[NUMERO_JUGADORES_MUS] = {
+        manoDe(REY, SOTA, SEIS, CUATRO),   // 30, sin juego
+        manoDe(AS, AS, AS, AS),            // 4, sin juego
+        manoDe(REY, REY, SEIS, SIETE),     // 33
+        manoDe(DOS, DOS, DOS, DOS),        // 4, sin juego
+    };
+    VERIFICAR(ganadorJuego(manos4, 0) == 2);
+    liberarManos(manos4);
+}
+
 int main(void) {
     testCrearManoMus();
     testGrande();
     testChica();
     testPar();
     testPunto();
+    testGanadorPunto();
     return resumenPruebas("test_mus");
 }

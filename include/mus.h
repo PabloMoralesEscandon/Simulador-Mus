@@ -51,6 +51,8 @@ int sumaMano(Mano mano);
 
 int ganadorJuego(Mano manos[NUMERO_JUGADORES_MUS], int mano);
 
+int ganadorPunto(Mano manos[NUMERO_JUGADORES_MUS], int mano);
+
 int iniciarPartidaMus(PartidaMus *partida);
 
 int destruirPartidaMus(PartidaMus *partida);

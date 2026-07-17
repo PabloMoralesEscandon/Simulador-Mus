@@ -198,6 +198,22 @@ int ganadorJuego(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
             ganador = j;
         }
     }
+    if (max == -1)
+        return ganadorPunto(manos, mano);
+    return ganador;
+}
+
+int ganadorPunto(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
+    int max = sumaMano(manos[mano]);
+    int ganador = mano;
+    for (size_t i = 0; i < NUMERO_JUGADORES_MUS; i++) {
+        int j = (mano + i) % NUMERO_JUGADORES_MUS;
+        int valor = sumaMano(manos[j]);
+        if (valor > max) {
+            max = valor;
+            ganador = j;
+        }
+    }
     return ganador;
 }
 
