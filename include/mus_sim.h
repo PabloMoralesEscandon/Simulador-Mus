@@ -10,6 +10,8 @@ typedef struct {
     int c[CERDO + 1];
 } ConteoMus;
 
+void fijarVerbosidadSim(int verboso);
+
 int simularRondaMus(PartidaMus *partida);
 
 int simularPartidaMus();

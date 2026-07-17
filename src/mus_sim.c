@@ -1,6 +1,7 @@
 #include <stdint.h>
 
 #include "baraja_espanola.h"
+#include "mus_io.h"
 #include "mus_sim.h"
 
 const ConteoMus BARAJA_MUS_COMPLETA = {.c = {8, 4, 4, 4, 4, 4, 4, 8}};
@@ -8,27 +9,39 @@ const ConteoMus BARAJA_MUS_COMPLETA = {.c = {8, 4, 4, 4, 4, 4, 4, 8}};
 static const int NUMERO_ESPANOL_DESDE_MUS[CERDO + 1] = {
     AS, CUATRO, CINCO, SEIS, SIETE, SOTA, CABALLO, REY};
 
+static int sim_verboso = 0;
+
+void fijarVerbosidadSim(int verboso) { sim_verboso = verboso; }
+
+static int puntuarLance(PartidaMus *partida, const char *lance,
+                        int (*ganadorLance)(Mano[NUMERO_JUGADORES_MUS], int)) {
+    int ganador = ganadorLance(partida->manos, partida->mano);
+    if (sim_verboso)
+        imprimirGanadorLance(lance, ganador);
+    return puntuarRonda(partida, ganador, 1);
+}
+
 int simularRondaMus(PartidaMus *partida) {
     if (partida == NULL)
         return -1;
-    int ganador = 0;
-    repartirManos(partida);
-    ganador =
-        puntuarRonda(partida, ganadorGrande(partida->manos, partida->mano), 1);
+    if (repartirManos(partida))
+        return -1;
+    if (sim_verboso)
+        imprimirManos(partida);
+    int ganador = puntuarLance(partida, "Grande", ganadorGrande);
     if (ganador)
         return ganador;
-    ganador =
-        puntuarRonda(partida, ganadorChica(partida->manos, partida->mano), 1);
+    ganador = puntuarLance(partida, "Chica", ganadorChica);
     if (ganador)
         return ganador;
-    ganador =
-        puntuarRonda(partida, ganadorPar(partida->manos, partida->mano), 1);
+    ganador = puntuarLance(partida, "Pares", ganadorPar);
     if (ganador)
         return ganador;
-    ganador =
-        puntuarRonda(partida, ganadorJuego(partida->manos, partida->mano), 1);
+    ganador = puntuarLance(partida, "Juego", ganadorJuego);
     if (ganador)
         return ganador;
+    if (sim_verboso)
+        imprimirTantos(partida);
     partida->mano = (partida->mano + 1) % NUMERO_JUGADORES_MUS;
     return 0;
 }
@@ -37,19 +50,26 @@ int simularPartidaMus() {
     PartidaMus partida = {0};
     if (iniciarPartidaMus(&partida))
         return 1;
+    int ronda = 0;
+    int ganador = 0;
     do {
-        if (resetearMazo(&partida))
+        if (resetearMazo(&partida)) {
+            destruirPartidaMus(&partida);
             return 1;
-    } while (!simularRondaMus(&partida));
-    if (partida.tantos[0] >= 40) {
-        // Imprimir ganador
-    } else if (partida.tantos[1] >= 40) {
-        // Imprimir ganador
+        }
+        ronda += 1;
+        if (sim_verboso)
+            imprimirNumeroRonda(ronda);
+    } while (!(ganador = simularRondaMus(&partida)));
+    int resultado = 0;
+    if (ganador == 1 || ganador == 2) {
+        if (sim_verboso)
+            imprimirGanadorPartida(&partida);
     } else {
-        // Error
+        resultado = 1;
     }
     destruirPartidaMus(&partida);
-    return 0;
+    return resultado;
 }
 
 static void construirMano(Mano *mano, const int valores[TAMANO_MANO_MUS]) {
@@ -93,6 +113,8 @@ double probabilidadesVictoria2Fija(Mano manos[NUMERO_JUGADORES_MUS - 2],
                                    int mano, Ronda ronda,
                                    Condicion condicionMano1,
                                    Condicion condicionMano2) {
+    if (manos == NULL || manos[0].cartas == NULL || manos[1].cartas == NULL)
+        return -1.0;
     ConteoMus conteo = BARAJA_MUS_COMPLETA;
     for (size_t mano = 0; mano < 2; mano++)
         for (size_t i = 0; i < manos[mano].tamano; i++)
