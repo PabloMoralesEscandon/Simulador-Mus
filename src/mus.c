@@ -3,10 +3,15 @@
 #include "baraja_espanola.h"
 #include "mus.h"
 
+// Potencias de 10 por clase: al sumar los pesos de las 4 cartas, cada
+// dígito de la clave cuenta cuántas cartas hay de esa clase, así que
+// comparar claves equivale a comparar las manos carta a carta.
+// PESO_CHICA invierte los pesos porque en chica mandan las cartas bajas.
 static const int PESO_GRANDE[CERDO + 1] = {1,     10,     100,     1000,
                                            10000, 100000, 1000000, 10000000};
 static const int PESO_CHICA[CERDO + 1] = {10000000, 1000000, 100000, 10000,
                                           1000,     100,     10,     1};
+// Valores de juego ordenados de peor a mejor: 33 < 34 < ... < 40 < 32 < 31
 static const int ORDEN_PUNTO[8] = {33, 34, 35, 36, 37, 40, 32, 31};
 
 int crearManoMus(Mano *mano) { return crearMano(mano, TAMANO_MANO_MUS); }
@@ -92,10 +97,14 @@ int clavePar(Mano mano) {
     int c[CERDO + 1] = {0};
     int tipo = NO_PAR;
     int alto = 0, bajo = 0;
+    // Cuenta cuántas cartas hay de cada clase
     for (size_t i = 0; i < mano.tamano; i++)
         c[valorMus(mano.cartas[i])]++;
+    // Busca repeticiones de menor a mayor clase; alto/bajo guardan i + 1
+    // para que un par de pitos (i == 0) no se confunda con no tener pares
     for (int i = 0; i < CERDO + 1; i++) {
         if (c[i] == 4) {
+            // Cuatro iguales: dúplex de la misma clase
             tipo = DUPLEX;
             alto = i + 1;
             bajo = alto;
@@ -106,6 +115,7 @@ int clavePar(Mano mano) {
             break;
         } else if (c[i] == 2) {
             if (tipo == PAR) {
+                // Segundo par: dúplex con el par más alto por delante
                 tipo = DUPLEX;
                 if (alto < (i + 1)) {
                     bajo = alto;
@@ -119,6 +129,8 @@ int clavePar(Mano mano) {
             }
         }
     }
+    // La codificación separa los tipos por magnitud: cualquier dúplex
+    // (>= 100) gana a cualquier medias (>= 10) y estas a cualquier par
     switch (tipo) {
     case PAR:
         return alto;
@@ -170,15 +182,13 @@ int valorPuntoMus(Carta carta) {
 
 int sumaMano(Mano mano) {
     int cuenta = 0;
-
-    // Loop through each card in the hand
     for (size_t i = 0; i < mano.tamano; i++) {
         cuenta += valorPuntoMus(mano.cartas[i]);
     }
-
-    return cuenta; // Return the calculated sum
+    return cuenta;
 }
 
+/** Posición del juego en ORDEN_PUNTO (mayor es mejor); -1 sin juego. */
 static int claveJuego(Mano mano) {
     int valor = sumaMano(mano);
     for (int i = 0; i < 8; i++)
@@ -269,6 +279,8 @@ int destruirPartidaMus(PartidaMus *partida) {
 int barajarDescartes(PartidaMus *partida) {
     if (partida == NULL)
         return 1;
+    // El mazo pasa a contener solo las cartas descartadas hasta ahora:
+    // se copian al principio y tamano se encoge a ese número
     for (size_t i = 0; i < partida->descartes.siguiente_carta; i++)
         partida->baraja.cartas[i] = partida->descartes.cartas[i];
     partida->baraja.tamano = partida->descartes.siguiente_carta;
@@ -314,6 +326,8 @@ int manoSeDescarta(PartidaMus *partida, Mano *mano,
         return 1;
     for (size_t i = 0; i < TAMANO_MANO_MUS; i++) {
         if (descartadas[i]) {
+            // La carta descartada va a la pila y se roba una nueva;
+            // si el mazo se agota, se recicla la pila de descartes
             partida->descartes.cartas[partida->descartes.siguiente_carta] =
                 mano->cartas[i];
             partida->descartes.siguiente_carta += 1;

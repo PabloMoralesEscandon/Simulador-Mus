@@ -13,16 +13,20 @@ NivelLog obtenerNivelLog(void) { return nivel_log; }
 
 void fijarSalidaLog(FILE *salida) { salida_log = salida; }
 
+/** Destino actual del log (stdout si no se ha fijado otro). */
 static FILE *salidaLog(void) {
     return salida_log != NULL ? salida_log : stdout;
 }
 
+/** Un mensaje solo puede llevar niveles entre LOG_RESULTADO y LOG_LANCES. */
 static int nivelInvalido(NivelLog nivel) {
     return nivel <= LOG_SILENCIO || nivel > LOG_LANCES;
 }
 
+/** Verdadero si el nivel configurado no alcanza al del mensaje. */
 static int filtrado(NivelLog nivel) { return nivel > nivel_log; }
 
+/** Nombre en texto de un NumeroEspanol, NULL si no existe. */
 static const char *nombreNumero(int numero) {
     switch (numero) {
     case AS:
@@ -54,6 +58,7 @@ static const char *nombreNumero(int numero) {
     }
 }
 
+/** Nombre en texto de un PaloEspanol, NULL si no existe. */
 static const char *nombrePalo(int palo) {
     switch (palo) {
     case OROS:

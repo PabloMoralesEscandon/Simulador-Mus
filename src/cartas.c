@@ -10,7 +10,6 @@ int crearBaraja(Baraja *baraja, size_t tamano) {
     baraja->cartas = malloc(tamano * sizeof(Carta));
     if (baraja->cartas == NULL)
         return 1;
-    // Asginar valores
     baraja->tamano = tamano;
     baraja->siguiente_carta = 0;
     return 0;
@@ -38,9 +37,9 @@ int barajar(Baraja *baraja) {
     if (baraja->tamano == 0)
         return 1;
 
-    // Inicializar el generador de números aleatorios
+    // Fisher-Yates: recorre desde el final intercambiando cada posición
+    // con un índice aleatorio entre 0 e i
     for (size_t i = baraja->tamano - 1; i > 0; i--) {
-        // Elegir un índice aleatorio entre 0 e i
         int j = rand() % (i + 1);
 
         // Intercambiar array[i] con array[j]

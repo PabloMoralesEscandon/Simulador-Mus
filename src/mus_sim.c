@@ -4,11 +4,15 @@
 #include "mus_log.h"
 #include "mus_sim.h"
 
+/** Cartas por clase en la baraja de 40: 8 pitos, 4 de cada número
+ *  intermedio y 8 cerdos. */
 const ConteoMus BARAJA_MUS_COMPLETA = {.c = {8, 4, 4, 4, 4, 4, 4, 8}};
 
+// Carta representativa de cada clase (el palo es irrelevante en el mus)
 static const int NUMERO_ESPANOL_DESDE_MUS[CERDO + 1] = {
     AS, CUATRO, CINCO, SEIS, SIETE, SOTA, CABALLO, REY};
 
+/** Resuelve un lance, lo loguea y lo puntúa con puntuarRonda. */
 static int puntuarLance(PartidaMus *partida, const char *lance,
                         int (*ganadorLance)(Mano[NUMERO_JUGADORES_MUS], int)) {
     int ganador = ganadorLance(partida->manos, partida->mano);
@@ -63,6 +67,7 @@ int simularPartidaMus() {
     return resultado;
 }
 
+/** Rellena mano con las cartas representativas de esas clases de valor. */
 static void construirMano(Mano *mano, const int valores[TAMANO_MANO_MUS]) {
     for (size_t i = 0; i < TAMANO_MANO_MUS; i++) {
         mano->cartas[i].numero = NUMERO_ESPANOL_DESDE_MUS[valores[i]];
@@ -70,16 +75,21 @@ static void construirMano(Mano *mano, const int valores[TAMANO_MANO_MUS]) {
     }
 }
 
+/** Número combinatorio C(n, k). */
 static uint64_t combinaciones(int n, int k) {
     if (k < 0 || k > n)
         return 0;
 
     uint64_t resultado = 1;
+    // Tras cada paso resultado = C(n-k+i, i), así que la división es exacta
     for (int i = 1; i <= k; i++)
         resultado = resultado * (n - k + i) / i;
     return resultado;
 }
 
+/** Cuántos repartos físicos distintos producen estas dos manos: producto,
+ *  clase a clase, de las formas de elegir esas cartas entre las
+ *  disponibles (la mano 4 elige entre las que deja la mano 2). */
 static uint64_t pesoCombinatorio(const ConteoMus *disponibles,
                                  const int valoresMano2[TAMANO_MANO_MUS],
                                  const int valoresMano4[TAMANO_MANO_MUS]) {
@@ -106,6 +116,7 @@ double probabilidadesVictoria2Fija(Mano manos[NUMERO_JUGADORES_MUS - 2],
                                    Condicion condicionMano2) {
     if (manos == NULL || manos[0].cartas == NULL || manos[1].cartas == NULL)
         return -1.0;
+    // Retira de la baraja las cartas de las dos manos fijas
     ConteoMus conteo = BARAJA_MUS_COMPLETA;
     for (size_t mano = 0; mano < 2; mano++)
         for (size_t i = 0; i < manos[mano].tamano; i++)
@@ -116,10 +127,12 @@ double probabilidadesVictoria2Fija(Mano manos[NUMERO_JUGADORES_MUS - 2],
     Carta cartasMano4[TAMANO_MANO_MUS];
     Mano mano4 = {.cartas = cartasMano4, .tamano = TAMANO_MANO_MUS};
 
-    /* Estos acumuladores cuentan repartos fisicos, no solo composiciones.
-     */
+    // Los acumuladores cuentan repartos físicos, no solo composiciones
     uint64_t casos = 0;
     uint64_t exitos = 0;
+    // Enumera cada mano rival como multiconjunto ordenado (carta1 <= ... <=
+    // carta4), de modo que cada composición aparece una sola vez; temp solo
+    // comprueba que queden cartas, el peso real lo da pesoCombinatorio
     for (int carta1 = PITO; carta1 <= CERDO; carta1++) {
         ConteoMus temp = conteo;
         if (temp.c[carta1] == 0)
@@ -165,6 +178,8 @@ double probabilidadesVictoria2Fija(Mano manos[NUMERO_JUGADORES_MUS - 2],
 
                                     construirMano(&mano2, valoresMano2);
                                     construirMano(&mano4, valoresMano4);
+                                    // Las manos fijas ocupan las
+                                    // posiciones 0 y 2 (su pareja)
                                     Mano manos_prueba[4] = {manos[0], mano2,
                                                             manos[1], mano4};
                                     int ganador =
