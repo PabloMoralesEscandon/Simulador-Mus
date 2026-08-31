@@ -7,6 +7,11 @@
 
 #include "mus.h"
 
+/** Máximo de rondas de descartes consecutivas antes de abortar una fase. */
+#ifndef MAXIMO_RONDAS_FASE_MUS
+#define MAXIMO_RONDAS_FASE_MUS 1000
+#endif
+
 /** Restricciones sobre las manos rivales enumeradas. */
 typedef enum { NADA, TIENE_JUEGO, TIENE_31, PAR_Y_JUEGO } Condicion;
 
@@ -28,8 +33,7 @@ typedef int (*SeleccionDescartes)(const Mano *mano, int jugador,
                                   void *contexto);
 
 /** Decide la siguiente acción de un jugador en la negociación de un lance.
- *  ACCION_PASAR solo es válida con ENVITE_AL_PASO. Ante un envite pendiente,
- *  debe querer, no querer, subir o lanzar un órdago; pasar aborta con error. */
+ *  ACCION_PASAR rechaza como ACCION_NO_QUERER un envite pendiente. */
 typedef AccionEnviteMus (*DecisionEnvite)(const Mano *mano, int jugador,
                                           int manoPartida,
                                           const int tantos[2], Ronda ronda,
@@ -44,31 +48,31 @@ typedef struct {
     void *contexto;
 } EstrategiaMus;
 
-/** Ejecuta mus y descartes repetidos hasta que un jugador corta. */
+/** Ejecuta mus y descartes hasta que alguien corta; devuelve 1 si alcanza el
+ *  límite MAXIMO_RONDAS_FASE_MUS o una estrategia produce un error. */
 int jugarFaseMus(PartidaMus *partida,
                  const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS]);
 
-/** Negocia y registra el envite de un lance; devuelve 0, 1, 2 o -1.
- *  Una acción no válida para el estado actual, incluido pasar ante un envite
- *  pendiente, devuelve -1. */
+/** Negocia y registra el envite de un lance; devuelve 0, 1, 2 o -1. */
 int jugarLanceEnvite(
     PartidaMus *partida, Ronda ronda,
     const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS],
     EnviteMus *resultado);
 
 /** Juega una ronda con la estrategia pasiva: corta mus y pasa los envites.
- *  Reparte, tantea los lances aplicables y pasa la mano al siguiente jugador.
+ *  Reconstruye y baraja el mazo, reparte, tantea los lances aplicables y pasa
+ *  la mano al siguiente jugador.
  *  @return 0 si la partida sigue, 1 o 2 si ese equipo llega a 40, -1 si
  *  error. */
 int simularRondaMus(PartidaMus *partida);
 
-/** Juega una ronda usando estrategias para mus, descartes y envites. */
+/** Reconstruye el mazo y juega una ronda usando las estrategias indicadas. */
 int simularRondaMusConEstrategias(
     PartidaMus *partida,
     const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS]);
 
 /** Simula una partida completa a 40 tantos, logueando el progreso. */
-int simularPartidaMus();
+int simularPartidaMus(void);
 
 /** Simula una partida tradicional usando las cuatro estrategias indicadas. */
 int simularPartidaMusConEstrategias(

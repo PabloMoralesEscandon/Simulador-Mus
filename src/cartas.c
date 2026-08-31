@@ -42,7 +42,7 @@ static size_t aleatorioAcotado(size_t limite) {
 
 int crearBaraja(Baraja *baraja, size_t tamano) {
     // Caso de puntero NULL
-    if (baraja == NULL)
+    if (baraja == NULL || tamano == 0 || tamano > SIZE_MAX / sizeof(Carta))
         return 1;
     // Alocar memoria para las cartas
     baraja->cartas = malloc(tamano * sizeof(Carta));
@@ -107,7 +107,7 @@ int sacarCarta(Baraja *baraja, Carta *out) {
 
 int crearMano(Mano *mano, size_t tamano) {
     // Caso de puntero NULL
-    if (mano == NULL)
+    if (mano == NULL || tamano == 0 || tamano > SIZE_MAX / sizeof(Carta))
         return 1;
     mano->cartas = malloc(tamano * sizeof(Carta));
     if (mano->cartas == NULL)

@@ -6,8 +6,22 @@ on:
 
 jobs:
   test:
+    name: ${{ matrix.name }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: GCC con sanitizers
+            compiler: gcc
+            target: test
+          - name: Clang con sanitizers
+            compiler: clang
+            target: test
+          - name: GCC optimizado
+            compiler: gcc
+            target: test-release
     steps:
       - uses: actions/checkout@v4
       - name: Compilar y ejecutar tests
-        run: make test
+        run: make ${{ matrix.target }} CC=${{ matrix.compiler }}

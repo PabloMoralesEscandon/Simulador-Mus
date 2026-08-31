@@ -21,11 +21,13 @@ combinatoria, sin Monte Carlo.
 
 ## Compilar y ejecutar
 
-Requisitos: `gcc` y `make`. Las pruebas se compilan con ASan y UBSan.
+Requisitos: `gcc` y `make`. Las pruebas se compilan con ASan y UBSan. El
+simulador y los experimentos se compilan con `-O2` y sin sanitizers.
 
 ```sh
 make               # compila el simulador y ejecuta las pruebas
 make test          # compila y ejecuta solo las pruebas
+make test-release  # ejecuta las pruebas optimizadas sin sanitizers
 make experimentos  # compila los experimentos mantenidos en build/
 make clean
 ```
@@ -51,7 +53,7 @@ Para crear una partida de dos jugadores desde la API:
 PartidaMus partida;
 if (iniciarPartidaMusConJugadores(&partida, MUS_DOS_JUGADORES) != 0)
     return 1;
-/* repartirManos, jugar rondas o usar simularRondaMus... */
+/* simularRondaMus reconstruye el mazo y juega una ronda completa. */
 destruirPartidaMus(&partida);
 ```
 
@@ -65,12 +67,15 @@ Cada jugador aporta tres callbacks:
 
 - `decidirMus`: devuelve 1 para dar mus o 0 para cortarlo.
 - `elegirDescartes`: marca las cartas que cambia cuando todos dan mus.
-- `decidirEnvite`: pasa, envida, quiere, no quiere o lanza un órdago.
+- `decidirEnvite`: pasa, envida, quiere, no quiere o lanza un órdago. Pasar
+  ante un envite pendiente equivale a no quererlo.
 
 Los callbacks reciben la mano, la posición del jugador, quién es mano, el
-marcador y un contexto propio. `simularRondaMusConEstrategias` ejecuta una
-mano sobre una partida existente. Para una partida completa configurable se
-usa `simularPartidaMusConEstrategiasYJugadores`; las funciones existentes sin
+marcador y un contexto propio. `simularRondaMusConEstrategias` reconstruye el
+mazo y ejecuta una mano sobre una partida existente. La fase de mus se aborta
+con error tras `MAXIMO_RONDAS_FASE_MUS` rondas de descartes consecutivas. Para
+una partida completa configurable se usa
+`simularPartidaMusConEstrategiasYJugadores`; las funciones existentes sin
 número de jugadores conservan la modalidad de cuatro. La partida termina
 cuando uno de los dos equipos alcanza 40 tantos.
 
@@ -128,10 +133,10 @@ elegible para pares o juego, no se abre envite en ese lance.
 
 No se modelan señas, variantes regionales, vacas o torneos. Las estrategias
 son callbacks: la librería aporta la estrategia pasiva de ejemplo, no una IA
-competitiva. `experimentos/experimento2.c` conserva código histórico y no
-forma parte del objetivo `make experimentos`.
+competitiva.
 
 ## Pruebas y CI
 
-`make test` compila y ejecuta las seis suites con ASan y UBSan. GitHub
-Actions las ejecuta en cada `push` y `pull request`.
+`make test` compila y ejecuta las seis suites con ASan y UBSan. GitHub Actions
+las ejecuta con GCC y Clang, y repite la batería optimizada sin sanitizers, en
+cada `push` y `pull request`.

@@ -49,7 +49,7 @@ int jugarFaseMus(PartidaMus *partida,
             estrategias[jugador].elegirDescartes == NULL)
             return 1;
 
-    for (;;) {
+    for (int rondaMus = 0; rondaMus < MAXIMO_RONDAS_FASE_MUS; rondaMus++) {
         int decisiones[NUMERO_JUGADORES_MUS] = {0};
         for (int turno = 0; turno < partida->numeroJugadores; turno++) {
             int jugador =
@@ -86,6 +86,7 @@ int jugarFaseMus(PartidaMus *partida,
         if (descartarManosMus(partida, descartadas))
             return 1;
     }
+    return 1;
 }
 
 static int puedeApostarLance(const PartidaMus *partida, int jugador,
@@ -166,9 +167,8 @@ int jugarLanceEnvite(
             &partida->manos[jugador], jugador, partida->mano,
             partida->tantos, ronda, resultado,
             estrategias[jugador].contexto);
-        if (accion.tipo == ACCION_PASAR) {
-            if (resultado->estado != ENVITE_AL_PASO)
-                return -1;
+        if (accion.tipo == ACCION_PASAR &&
+            resultado->estado == ENVITE_AL_PASO) {
             pasos++;
             if (pasos == elegibles)
                 return registrarEnviteMus(partida, ronda, resultado);
@@ -190,7 +190,17 @@ int jugarLanceEnvite(
 int simularRondaMusConEstrategias(
     PartidaMus *partida,
     const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS]) {
-    if (partida == NULL || estrategias == NULL)
+    if (partida == NULL || estrategias == NULL || partida->mano < 0 ||
+        (partida->numeroJugadores != MUS_DOS_JUGADORES &&
+         partida->numeroJugadores != MUS_CUATRO_JUGADORES) ||
+        partida->mano >= partida->numeroJugadores)
+        return -1;
+    for (int jugador = 0; jugador < partida->numeroJugadores; jugador++)
+        if (estrategias[jugador].decidirMus == NULL ||
+            estrategias[jugador].elegirDescartes == NULL ||
+            estrategias[jugador].decidirEnvite == NULL)
+            return -1;
+    if (resetearMazo(partida))
         return -1;
     if (reiniciarEnvitesRonda(&partida->envites_actuales))
         return -1;
@@ -351,10 +361,6 @@ int simularPartidaMusConEstrategiasYJugadores(
     int ronda = 0;
     int ganador = 0;
     do {
-        if (resetearMazo(&partida)) {
-            destruirPartidaMus(&partida);
-            return 1;
-        }
         ronda += 1;
         logNumeroRonda(LOG_RONDAS, ronda);
     } while (!(ganador =
@@ -389,7 +395,7 @@ int simularPartidaMusConJugadores(int numeroJugadores) {
                                                       numeroJugadores);
 }
 
-int simularPartidaMus() {
+int simularPartidaMus(void) {
     return simularPartidaMusConJugadores(MUS_CUATRO_JUGADORES);
 }
 
@@ -411,29 +417,6 @@ static uint64_t combinaciones(int n, int k) {
     for (int i = 1; i <= k; i++)
         resultado = resultado * (n - k + i) / i;
     return resultado;
-}
-
-/** Cuántos repartos físicos distintos producen estas dos manos: producto,
- *  clase a clase, de las formas de elegir esas cartas entre las
- *  disponibles (la mano 4 elige entre las que deja la mano 2). */
-static uint64_t pesoCombinatorio(const ConteoMus *disponibles,
-                                 const int valoresMano2[TAMANO_MANO_MUS],
-                                 const int valoresMano4[TAMANO_MANO_MUS]) {
-    ConteoMus usadasMano2 = {0};
-    ConteoMus usadasMano4 = {0};
-
-    for (size_t i = 0; i < TAMANO_MANO_MUS; i++) {
-        usadasMano2.c[valoresMano2[i]] += 1;
-        usadasMano4.c[valoresMano4[i]] += 1;
-    }
-
-    uint64_t peso = 1;
-    for (int valor = PITO; valor <= CERDO; valor++) {
-        peso *= combinaciones(disponibles->c[valor], usadasMano2.c[valor]);
-        peso *= combinaciones(disponibles->c[valor] - usadasMano2.c[valor],
-                              usadasMano4.c[valor]);
-    }
-    return peso;
 }
 
 static int numeroValidoMus(int numero) {
@@ -622,8 +605,8 @@ double probabilidadesVictoria2Fija(Mano manos[NUMERO_JUGADORES_MUS - 2],
     uint64_t casos = 0;
     uint64_t exitos = 0;
     // Enumera cada mano rival como multiconjunto ordenado (carta1 <= ... <=
-    // carta4), de modo que cada composición aparece una sola vez; temp solo
-    // comprueba que queden cartas, el peso real lo da pesoCombinatorio
+    // carta4), de modo que cada composición aparece una sola vez; temp
+    // comprueba que queden cartas y pesoUnaMano cuenta las elecciones físicas
     for (int carta1 = PITO; carta1 <= CERDO; carta1++) {
         ConteoMus temp = conteo;
         if (temp.c[carta1] == 0)
@@ -641,6 +624,17 @@ double probabilidadesVictoria2Fija(Mano manos[NUMERO_JUGADORES_MUS - 2],
                     if (temp.c[carta4] == 0)
                         continue;
                     temp.c[carta4] -= 1;
+
+                    int valoresMano2[TAMANO_MANO_MUS] = {
+                        carta1, carta2, carta3, carta4};
+                    construirMano(&mano2, valoresMano2);
+                    if (manoCumpleCondicion(mano2, condicionMano1) != 1) {
+                        temp.c[carta4] += 1;
+                        continue;
+                    }
+                    uint64_t pesoMano2 = pesoUnaMano(&conteo, valoresMano2);
+                    ConteoMus disponiblesMano4 = temp;
+
                     for (int carta5 = PITO; carta5 <= CERDO; carta5++) {
                         if (temp.c[carta5] == 0)
                             continue;
@@ -660,22 +654,18 @@ double probabilidadesVictoria2Fija(Mano manos[NUMERO_JUGADORES_MUS - 2],
                                         continue;
                                     temp.c[carta8] -= 1;
 
-                                    int valoresMano2[TAMANO_MANO_MUS] = {
-                                        carta1, carta2, carta3, carta4};
                                     int valoresMano4[TAMANO_MANO_MUS] = {
                                         carta5, carta6, carta7, carta8};
-                                    uint64_t peso = pesoCombinatorio(
-                                        &conteo, valoresMano2, valoresMano4);
-
-                                    construirMano(&mano2, valoresMano2);
                                     construirMano(&mano4, valoresMano4);
                                     if (manoCumpleCondicion(
-                                            mano2, condicionMano1) != 1 ||
-                                        manoCumpleCondicion(
                                             mano4, condicionMano2) != 1) {
                                         temp.c[carta8] += 1;
                                         continue;
                                     }
+                                    uint64_t peso =
+                                        pesoMano2 * pesoUnaMano(
+                                                        &disponiblesMano4,
+                                                        valoresMano4);
                                     // Las manos fijas ocupan las
                                     // posiciones 0 y 2 (su pareja)
                                     Mano manos_prueba[4] = {manos[0], mano2,

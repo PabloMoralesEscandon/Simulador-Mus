@@ -61,7 +61,7 @@ typedef struct {
 } EnviteMus;
 
 /** Acciones que puede devolver una estrategia durante un lance.
- *  ACCION_PASAR solo es válida mientras no haya un envite pendiente. */
+ *  ACCION_PASAR equivale a ACCION_NO_QUERER ante un envite pendiente. */
 typedef enum {
     ACCION_PASAR,
     ACCION_ENVIDAR,
@@ -123,9 +123,7 @@ int registrarEnviteMus(PartidaMus *partida, Ronda ronda,
 int resolverOrdagoMus(PartidaMus *partida, Ronda ronda,
                       const EnviteMus *envite);
 
-/** Aplica una acción del equipo indicado a una negociación de envite.
- *  Pasar ante un envite u órdago pendiente es un error: la estrategia debe
- *  responder con querer, no querer, subir el envite o lanzar un órdago. */
+/** Aplica una acción del equipo indicado a una negociación de envite. */
 int aplicarAccionEnviteMus(EnviteMus *envite, int pareja,
                            AccionEnviteMus accion);
 

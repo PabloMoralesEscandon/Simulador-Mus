@@ -637,9 +637,11 @@ int registrarEnviteMus(PartidaMus *partida, Ronda ronda,
 int resolverOrdagoMus(PartidaMus *partida, Ronda ronda,
                       const EnviteMus *envite) {
     if (partida == NULL || envite == NULL ||
-        envite->estado != ORDAGO_ACEPTADO || ronda < GRANDE || ronda > PUNTO)
+        envite->estado != ORDAGO_ACEPTADO || ronda < GRANDE || ronda > PUNTO ||
+        partida->mano < 0)
         return -1;
-    if (!numeroJugadoresValido(partida->numeroJugadores))
+    if (!numeroJugadoresValido(partida->numeroJugadores) ||
+        partida->mano >= partida->numeroJugadores)
         return -1;
 
     int ganador = -1;
@@ -693,7 +695,11 @@ int aplicarAccionEnviteMus(EnviteMus *envite, int pareja,
                            AccionEnviteMus accion) {
     switch (accion.tipo) {
     case ACCION_PASAR:
-        return envite != NULL && envite->estado == ENVITE_AL_PASO ? 0 : 1;
+        if (envite == NULL)
+            return 1;
+        if (envite->estado == ENVITE_AL_PASO)
+            return 0;
+        return noQuererEnviteMus(envite, pareja);
     case ACCION_ENVIDAR:
         return envidarMus(envite, pareja, accion.cantidadTotal);
     case ACCION_QUERER:
@@ -878,21 +884,22 @@ int puntuarRonda(PartidaMus *partida, int ganador, int tantos) {
 }
 
 int resetearMazo(PartidaMus *partida) {
-    if (partida == NULL)
+    if (partida == NULL || partida->baraja.cartas == NULL ||
+        partida->descartes.cartas == NULL)
         return 1;
-    Baraja baraja = {0};
-    if (crearBarajaEspanola40(&baraja))
-        return 1;
-    if (barajar(&baraja)) {
-        destruirBaraja(&baraja);
-        return 1;
+
+    static const int numeros[] = {AS,   DOS,   TRES, CUATRO,  CINCO,
+                                  SEIS, SIETE, SOTA, CABALLO, REY};
+    for (int palo = OROS; palo <= BASTOS; palo++) {
+        for (size_t i = 0; i < sizeof(numeros) / sizeof(numeros[0]); i++) {
+            size_t posicion = (size_t)palo * 10 + i;
+            partida->baraja.cartas[posicion] =
+                (Carta){.numero = numeros[i], .palo = palo};
+        }
     }
-    if (destruirBaraja(&partida->baraja)) {
-        destruirBaraja(&baraja);
-        return 1;
-    }
-    partida->baraja = baraja;
+    partida->baraja.tamano = 40;
+    partida->baraja.siguiente_carta = 0;
     partida->descartes.tamano = 40;
     partida->descartes.siguiente_carta = 0;
-    return 0;
+    return barajar(&partida->baraja);
 }

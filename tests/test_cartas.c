@@ -5,6 +5,8 @@
 
 static void testCrearDestruirBaraja(void) {
     VERIFICAR(crearBaraja(NULL, 40) == 1);
+    Baraja vacia = {0};
+    VERIFICAR(crearBaraja(&vacia, 0) == 1);
 
     Baraja baraja;
     VERIFICAR(crearBaraja(&baraja, 40) == 0);
@@ -76,6 +78,8 @@ static void testSacarCarta(void) {
 
 static void testCrearDestruirMano(void) {
     VERIFICAR(crearMano(NULL, 4) == 1);
+    Mano vacia = {0};
+    VERIFICAR(crearMano(&vacia, 0) == 1);
 
     Mano mano;
     VERIFICAR(crearMano(&mano, 4) == 0);

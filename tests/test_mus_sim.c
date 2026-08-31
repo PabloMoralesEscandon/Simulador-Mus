@@ -37,6 +37,17 @@ static int darMusUnaVez(const Mano *mano, int jugador, int manoPartida,
     return estado->decisiones++ == 0;
 }
 
+static int darMusSiempre(const Mano *mano, int jugador, int manoPartida,
+                         const int tantos[2], void *contexto) {
+    (void)mano;
+    (void)jugador;
+    (void)manoPartida;
+    (void)tantos;
+    ContextoMusPrueba *estado = contexto;
+    estado->decisiones++;
+    return 1;
+}
+
 static int decisionMusInvalida(const Mano *mano, int jugador, int manoPartida,
                                const int tantos[2], void *contexto) {
     (void)mano;
@@ -106,11 +117,11 @@ static void testJugarLanceEnvite(void) {
     contextos[0].acciones[0] =
         (AccionEnviteMus){.tipo = ACCION_ENVIDAR, .cantidadTotal = 2};
     contextos[0].numeroAcciones = 1;
-    // El jugador 1 usa la acción por defecto, ACCION_PASAR, que no es una
-    // respuesta válida ante el envite pendiente.
+    // El jugador 1 usa ACCION_PASAR, que rechaza el envite pendiente.
     VERIFICAR(jugarLanceEnvite(&partida, GRANDE, estrategias, &resultado) ==
-              -1);
-    VERIFICAR(resultado.estado == ENVITE_PENDIENTE);
+              0);
+    VERIFICAR(resultado.estado == ENVITE_RECHAZADO);
+    VERIFICAR(partida.tantos[0] == 1);
     VERIFICAR(destruirPartidaMus(&partida) == 0);
 }
 
@@ -138,6 +149,22 @@ static void testJugarFaseMus(void) {
         VERIFICAR(contextos[jugador].descartes == 1);
     }
     VERIFICAR(destruirPartidaMus(&partida) == 0);
+
+    VERIFICAR(iniciarPartidaMus(&partida) == 0);
+    VERIFICAR(resetearMazo(&partida) == 0);
+    VERIFICAR(repartirManos(&partida) == 0);
+    memset(contextos, 0, sizeof(contextos));
+    for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++) {
+        estrategias[jugador].decidirMus = darMusSiempre;
+        estrategias[jugador].elegirDescartes = descartarPrimera;
+        estrategias[jugador].contexto = &contextos[jugador];
+    }
+    VERIFICAR(jugarFaseMus(&partida, estrategias) == 1);
+    for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++) {
+        VERIFICAR(contextos[jugador].decisiones == MAXIMO_RONDAS_FASE_MUS);
+        VERIFICAR(contextos[jugador].descartes == MAXIMO_RONDAS_FASE_MUS);
+    }
+    VERIFICAR(destruirPartidaMus(&partida) == 0);
 }
 
 static void testSimularRondaMus(void) {
@@ -146,7 +173,7 @@ static void testSimularRondaMus(void) {
 
     PartidaMus partida = {0};
     VERIFICAR(iniciarPartidaMus(&partida) == 0);
-    VERIFICAR(resetearMazo(&partida) == 0);
+    partida.baraja.siguiente_carta = partida.baraja.tamano;
     partida.envites_actuales.grande = 2;
     partida.envites_actuales.chica = 4;
     partida.envites_actuales.pares = 6;
@@ -163,6 +190,8 @@ static void testSimularRondaMus(void) {
     VERIFICAR(partida.envites_actuales.pares == 0);
     VERIFICAR(partida.envites_actuales.juego == 0);
     VERIFICAR(partida.envites_actuales.punto == 0);
+    VERIFICAR(partida.baraja.tamano == 40);
+    VERIFICAR(partida.baraja.siguiente_carta == 16);
     for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++)
         VERIFICAR(partida.manos[jugador].tamano == TAMANO_MANO_MUS);
     VERIFICAR(destruirPartidaMus(&partida) == 0);
@@ -171,7 +200,6 @@ static void testSimularRondaMus(void) {
 static void testSimularRondaMusConEstrategias(void) {
     PartidaMus partida = {0};
     VERIFICAR(iniciarPartidaMus(&partida) == 0);
-    VERIFICAR(resetearMazo(&partida) == 0);
     ContextoMusPrueba contextos[NUMERO_JUGADORES_MUS] = {{0}};
     EstrategiaMus estrategias[NUMERO_JUGADORES_MUS] = {{0}};
     for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++) {
@@ -198,7 +226,6 @@ static void testPartidaPorRondas(void) {
     int ganador = 0;
     int rondas = 0;
     do {
-        VERIFICAR(resetearMazo(&partida) == 0);
         ganador = simularRondaMus(&partida);
         rondas += 1;
     } while (ganador == 0 && rondas < 100);

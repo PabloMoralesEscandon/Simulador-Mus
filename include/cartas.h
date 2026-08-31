@@ -29,7 +29,7 @@ typedef struct {
     size_t siguiente_carta;
 } Baraja;
 
-/** Reserva memoria para una baraja de tamano cartas y reinicia su cursor. */
+/** Reserva una baraja no vacía de tamano cartas y reinicia su cursor. */
 int crearBaraja(Baraja *baraja, size_t tamano);
 
 /** Libera la memoria de la baraja. */
@@ -41,7 +41,7 @@ int barajar(Baraja *baraja);
 /** Copia en out la siguiente carta y avanza el cursor; 1 si no quedan. */
 int sacarCarta(Baraja *baraja, Carta *out);
 
-/** Reserva memoria para una mano de tamano cartas. */
+/** Reserva una mano no vacía de tamano cartas. */
 int crearMano(Mano *mano, size_t tamano);
 
 /** Libera la memoria de la mano. */

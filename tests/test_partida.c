@@ -183,6 +183,13 @@ static void testResolverOrdagoMus(void) {
     iniciarEnviteMus(&envite);
     VERIFICAR(ordagoMus(&envite, 1) == 0);
     VERIFICAR(quererEnviteMus(&envite, 0) == 0);
+    partida.mano = -1;
+    VERIFICAR(resolverOrdagoMus(&partida, GRANDE, &envite) == -1);
+    VERIFICAR(partida.tantos[0] == 0);
+    partida.mano = NUMERO_JUGADORES_MUS;
+    VERIFICAR(resolverOrdagoMus(&partida, GRANDE, &envite) == -1);
+    VERIFICAR(partida.tantos[0] == 0);
+    partida.mano = 0;
     VERIFICAR(resolverOrdagoMus(&partida, GRANDE, &envite) == 1);
     VERIFICAR(partida.tantos[0] == 40);
     VERIFICAR(partida.tantos[1] == 0);
@@ -199,7 +206,10 @@ static void testAplicarAccionEnviteMus(void) {
     VERIFICAR(aplicarAccionEnviteMus(NULL, 0, pasar) == 1);
     VERIFICAR(aplicarAccionEnviteMus(&envite, 0, pasar) == 0);
     VERIFICAR(aplicarAccionEnviteMus(&envite, 0, envidar) == 0);
-    VERIFICAR(aplicarAccionEnviteMus(&envite, 1, pasar) == 1);
+    VERIFICAR(aplicarAccionEnviteMus(&envite, 1, pasar) == 0);
+    VERIFICAR(envite.estado == ENVITE_RECHAZADO);
+    iniciarEnviteMus(&envite);
+    VERIFICAR(aplicarAccionEnviteMus(&envite, 0, envidar) == 0);
     VERIFICAR(aplicarAccionEnviteMus(&envite, 1, querer) == 0);
     VERIFICAR(envite.estado == ENVITE_ACEPTADO);
 }
@@ -245,6 +255,7 @@ static void testManoSeDescarta(void) {
     int descartadas[TAMANO_MANO_MUS] = {1, 0, 1, 0};
     VERIFICAR(manoSeDescarta(NULL, &partida.manos[0], descartadas) == 1);
     VERIFICAR(manoSeDescarta(&partida, NULL, descartadas) == 1);
+    VERIFICAR(manoSeDescarta(&partida, &partida.manos[0], NULL) == 1);
 
     Carta antes0 = partida.manos[0].cartas[0];
     Carta antes1 = partida.manos[0].cartas[1];
@@ -331,7 +342,9 @@ static void testResetearMazo(void) {
         {1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}};
     VERIFICAR(descartarManosMus(&partida, descartadas) == 0);
     VERIFICAR(partida.descartes.siguiente_carta > 0);
+    Carta *cartas = partida.baraja.cartas;
     VERIFICAR(resetearMazo(&partida) == 0);
+    VERIFICAR(partida.baraja.cartas == cartas);
     VERIFICAR(partida.baraja.tamano == 40);
     VERIFICAR(partida.baraja.siguiente_carta == 0);
     VERIFICAR(partida.descartes.siguiente_carta == 0);
