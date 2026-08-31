@@ -64,6 +64,9 @@ int claveGrande(Mano mano);
 /** Ganador del lance de grande. */
 int ganadorGrande(Mano manos[NUMERO_JUGADORES_MUS], int mano);
 
+/** Puntúa grande y su envite aceptado; 0, 1 o 2 si éxito, -1 si error. */
+int puntuarGrande(PartidaMus *partida);
+
 /** Clave comparable para chica (las cartas bajas puntúan más). */
 int claveChica(Mano mano);
 

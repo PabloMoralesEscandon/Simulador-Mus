@@ -72,6 +72,23 @@ int ganadorGrande(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
     return ganador;
 }
 
+static int puntuarLanceSimple(
+    PartidaMus *partida, size_t envite,
+    int (*ganadorLance)(Mano[NUMERO_JUGADORES_MUS], int)) {
+    if (partida == NULL || ganadorLance == NULL || envite > INT_MAX)
+        return -1;
+    int ganador = ganadorLance(partida->manos, partida->mano);
+    int tantos = envite == 0 ? 1 : (int)envite;
+    return puntuarRonda(partida, ganador, tantos);
+}
+
+int puntuarGrande(PartidaMus *partida) {
+    if (partida == NULL)
+        return -1;
+    return puntuarLanceSimple(partida, partida->envites_actuales.grande,
+                              ganadorGrande);
+}
+
 int claveChica(Mano mano) {
     int clave = 0;
     for (size_t i = 0; i < mano.tamano; i++) {
