@@ -181,6 +181,13 @@ int ganadorPar(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
     return ganador;
 }
 
+int parejaTienePares(Mano manos[NUMERO_JUGADORES_MUS], int pareja) {
+    if (manos == NULL || pareja < 0 || pareja > 1)
+        return -1;
+    return tipoPares(manos[pareja]) != NO_PAR ||
+           tipoPares(manos[pareja + 2]) != NO_PAR;
+}
+
 int valorPuntoMus(Carta carta) {
     int valor = valorMus(carta);
 

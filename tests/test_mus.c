@@ -84,6 +84,8 @@ static void testChica(void) {
 }
 
 static void testPar(void) {
+    VERIFICAR(parejaTienePares(NULL, 0) == -1);
+
     // Duplex gana a medias, medias gana a par, par gana a no par
     Mano manos[NUMERO_JUGADORES_MUS] = {
         manoDe(AS, CUATRO, SIETE, SOTA),   // Sin pares
@@ -100,6 +102,10 @@ static void testPar(void) {
     VERIFICAR(tantosPares(manos[1]) == 1);
     VERIFICAR(tantosPares(manos[2]) == 3);
     VERIFICAR(tantosPares(manos[3]) == 2);
+    VERIFICAR(parejaTienePares(manos, -1) == -1);
+    VERIFICAR(parejaTienePares(manos, 2) == -1);
+    VERIFICAR(parejaTienePares(manos, 0) == 1);
+    VERIFICAR(parejaTienePares(manos, 1) == 1);
     liberarManos(manos);
 
     // Entre pares gana el más alto, y el tres cuenta como rey
@@ -141,6 +147,8 @@ static void testPar(void) {
         manoDe(AS, CINCO, SIETE, CABALLO),
         manoDe(DOS, CUATRO, SEIS, SOTA),
     };
+    VERIFICAR(parejaTienePares(manos4, 0) == 0);
+    VERIFICAR(parejaTienePares(manos4, 1) == 0);
     VERIFICAR(ganadorPar(manos4, 3) == 3);
     liberarManos(manos4);
 }
