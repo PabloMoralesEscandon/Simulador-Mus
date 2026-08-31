@@ -189,6 +189,20 @@ static void testResolverOrdagoMus(void) {
     destruirPartidaMus(&partida);
 }
 
+static void testAplicarAccionEnviteMus(void) {
+    EnviteMus envite;
+    iniciarEnviteMus(&envite);
+    AccionEnviteMus pasar = {.tipo = ACCION_PASAR};
+    AccionEnviteMus envidar = {.tipo = ACCION_ENVIDAR, .cantidadTotal = 2};
+    AccionEnviteMus querer = {.tipo = ACCION_QUERER};
+    VERIFICAR(aplicarAccionEnviteMus(NULL, 0, pasar) == 1);
+    VERIFICAR(aplicarAccionEnviteMus(&envite, 0, pasar) == 0);
+    VERIFICAR(aplicarAccionEnviteMus(&envite, 0, envidar) == 0);
+    VERIFICAR(aplicarAccionEnviteMus(&envite, 1, pasar) == 1);
+    VERIFICAR(aplicarAccionEnviteMus(&envite, 1, querer) == 0);
+    VERIFICAR(envite.estado == ENVITE_ACEPTADO);
+}
+
 static void testRepartirManos(void) {
     VERIFICAR(repartirManos(NULL) == 1);
 
@@ -406,6 +420,7 @@ int main(void) {
     testOrdagoMus();
     testRegistrarEnviteMus();
     testResolverOrdagoMus();
+    testAplicarAccionEnviteMus();
     testRepartirManos();
     testManoSeDescarta();
     testTodosDanMus();

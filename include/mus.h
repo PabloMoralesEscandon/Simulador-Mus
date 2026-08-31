@@ -53,6 +53,21 @@ typedef struct {
     int parejaApostadora;
 } EnviteMus;
 
+/** Acciones que puede devolver una estrategia durante un lance. */
+typedef enum {
+    ACCION_PASAR,
+    ACCION_ENVIDAR,
+    ACCION_QUERER,
+    ACCION_NO_QUERER,
+    ACCION_ORDAGO
+} TipoAccionEnviteMus;
+
+/** Acción de apuesta; cantidadTotal solo se usa con ACCION_ENVIDAR. */
+typedef struct {
+    TipoAccionEnviteMus tipo;
+    int cantidadTotal;
+} AccionEnviteMus;
+
 /** Importes aceptados que se tantean al final de la mano. */
 typedef struct {
     int grande;
@@ -97,6 +112,10 @@ int registrarEnviteMus(PartidaMus *partida, Ronda ronda,
 /** Resuelve un órdago aceptado y entrega el juego completo; -1 si error. */
 int resolverOrdagoMus(PartidaMus *partida, Ronda ronda,
                       const EnviteMus *envite);
+
+/** Aplica una acción de la pareja indicada a una negociación de envite. */
+int aplicarAccionEnviteMus(EnviteMus *envite, int pareja,
+                           AccionEnviteMus accion);
 
 /** Reserva una mano de TAMANO_MANO_MUS cartas. */
 int crearManoMus(Mano *mano);

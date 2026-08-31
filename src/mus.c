@@ -507,6 +507,24 @@ int resolverOrdagoMus(PartidaMus *partida, Ronda ronda,
     return pareja + 1;
 }
 
+int aplicarAccionEnviteMus(EnviteMus *envite, int pareja,
+                           AccionEnviteMus accion) {
+    switch (accion.tipo) {
+    case ACCION_PASAR:
+        return envite != NULL && envite->estado == ENVITE_AL_PASO ? 0 : 1;
+    case ACCION_ENVIDAR:
+        return envidarMus(envite, pareja, accion.cantidadTotal);
+    case ACCION_QUERER:
+        return quererEnviteMus(envite, pareja);
+    case ACCION_NO_QUERER:
+        return noQuererEnviteMus(envite, pareja);
+    case ACCION_ORDAGO:
+        return ordagoMus(envite, pareja);
+    default:
+        return 1;
+    }
+}
+
 int iniciarPartidaMus(PartidaMus *partida) {
     if (partida == NULL)
         return 1;
