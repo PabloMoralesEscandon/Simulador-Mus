@@ -167,6 +167,28 @@ static void testRegistrarEnviteMus(void) {
     destruirPartidaMus(&partida);
 }
 
+static void testResolverOrdagoMus(void) {
+    VERIFICAR(resolverOrdagoMus(NULL, GRANDE, NULL) == -1);
+    PartidaMus partida;
+    iniciarPartidaMus(&partida);
+    for (int i = 0; i < NUMERO_JUGADORES_MUS; i++)
+        destruirMano(&partida.manos[i]);
+    partida.manos[0] = manoDe(REY, REY, REY, AS);
+    partida.manos[1] = manoDe(CABALLO, CABALLO, CABALLO, CABALLO);
+    partida.manos[2] = manoDe(REY, REY, REY, REY);
+    partida.manos[3] = manoDe(REY, REY, REY, CABALLO);
+    partida.envites_actuales.grande = 6;
+    EnviteMus envite;
+    iniciarEnviteMus(&envite);
+    VERIFICAR(ordagoMus(&envite, 1) == 0);
+    VERIFICAR(quererEnviteMus(&envite, 0) == 0);
+    VERIFICAR(resolverOrdagoMus(&partida, GRANDE, &envite) == 1);
+    VERIFICAR(partida.tantos[0] == 40);
+    VERIFICAR(partida.tantos[1] == 0);
+    VERIFICAR(partida.envites_actuales.grande == 0);
+    destruirPartidaMus(&partida);
+}
+
 static void testRepartirManos(void) {
     VERIFICAR(repartirManos(NULL) == 1);
 
@@ -383,6 +405,7 @@ int main(void) {
     testNoQuererEnviteMus();
     testOrdagoMus();
     testRegistrarEnviteMus();
+    testResolverOrdagoMus();
     testRepartirManos();
     testManoSeDescarta();
     testTodosDanMus();

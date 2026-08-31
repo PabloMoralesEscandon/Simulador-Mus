@@ -94,6 +94,10 @@ int ordagoMus(EnviteMus *envite, int pareja);
 int registrarEnviteMus(PartidaMus *partida, Ronda ronda,
                        const EnviteMus *envite);
 
+/** Resuelve un órdago aceptado y entrega el juego completo; -1 si error. */
+int resolverOrdagoMus(PartidaMus *partida, Ronda ronda,
+                      const EnviteMus *envite);
+
 /** Reserva una mano de TAMANO_MANO_MUS cartas. */
 int crearManoMus(Mano *mano);
 

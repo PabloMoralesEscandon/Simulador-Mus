@@ -467,6 +467,46 @@ int registrarEnviteMus(PartidaMus *partida, Ronda ronda,
     return -1;
 }
 
+int resolverOrdagoMus(PartidaMus *partida, Ronda ronda,
+                      const EnviteMus *envite) {
+    if (partida == NULL || envite == NULL ||
+        envite->estado != ORDAGO_ACEPTADO || ronda < GRANDE || ronda > PUNTO)
+        return -1;
+
+    int ganador = -1;
+    switch (ronda) {
+    case GRANDE:
+        ganador = ganadorGrande(partida->manos, partida->mano);
+        break;
+    case CHICA:
+        ganador = ganadorChica(partida->manos, partida->mano);
+        break;
+    case PARES:
+        if (parejaTienePares(partida->manos, 0) != 1 ||
+            parejaTienePares(partida->manos, 1) != 1)
+            return -1;
+        ganador = ganadorPar(partida->manos, partida->mano);
+        break;
+    case JUEGO:
+        if (parejaTieneJuego(partida->manos, 0) != 1 ||
+            parejaTieneJuego(partida->manos, 1) != 1)
+            return -1;
+        ganador = ganadorJuego(partida->manos, partida->mano);
+        break;
+    case PUNTO:
+        if (parejaTieneJuego(partida->manos, 0) != 0 ||
+            parejaTieneJuego(partida->manos, 1) != 0)
+            return -1;
+        ganador = ganadorPunto(partida->manos, partida->mano);
+        break;
+    }
+
+    int pareja = ganador % 2;
+    partida->tantos[pareja] = 40;
+    reiniciarEnvitesRonda(&partida->envites_actuales);
+    return pareja + 1;
+}
+
 int iniciarPartidaMus(PartidaMus *partida) {
     if (partida == NULL)
         return 1;
