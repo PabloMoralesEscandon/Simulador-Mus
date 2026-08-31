@@ -367,11 +367,80 @@ static uint64_t pesoCombinatorio(const ConteoMus *disponibles,
     return peso;
 }
 
+static int numeroValidoMus(int numero) {
+    switch (numero) {
+    case AS:
+    case DOS:
+    case TRES:
+    case CUATRO:
+    case CINCO:
+    case SEIS:
+    case SIETE:
+    case SOTA:
+    case CABALLO:
+    case REY:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+static int manosFijasValidas(Mano manos[NUMERO_JUGADORES_MUS - 2]) {
+    if (manos == NULL)
+        return 0;
+    int vistas[BASTOS + 1][REY + 1] = {{0}};
+    for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS - 2; jugador++) {
+        if (manos[jugador].cartas == NULL ||
+            manos[jugador].tamano != TAMANO_MANO_MUS)
+            return 0;
+        for (size_t i = 0; i < manos[jugador].tamano; i++) {
+            Carta carta = manos[jugador].cartas[i];
+            if (!numeroValidoMus(carta.numero) || carta.palo < OROS ||
+                carta.palo > BASTOS || vistas[carta.palo][carta.numero])
+                return 0;
+            vistas[carta.palo][carta.numero] = 1;
+        }
+    }
+    return 1;
+}
+
+static int ganaParejaFija(Mano manos[NUMERO_JUGADORES_MUS], int mano,
+                          Ronda ronda) {
+    int ganador = -1;
+    switch (ronda) {
+    case GRANDE:
+        ganador = ganadorGrande(manos, mano);
+        break;
+    case CHICA:
+        ganador = ganadorChica(manos, mano);
+        break;
+    case PARES:
+        if (!parejaTienePares(manos, 0) && !parejaTienePares(manos, 1))
+            return 0;
+        ganador = ganadorPar(manos, mano);
+        break;
+    case JUEGO:
+        if (!parejaTieneJuego(manos, 0) && !parejaTieneJuego(manos, 1))
+            return 0;
+        ganador = ganadorJuego(manos, mano);
+        break;
+    case PUNTO:
+        if (parejaTieneJuego(manos, 0) || parejaTieneJuego(manos, 1))
+            return 0;
+        ganador = ganadorPunto(manos, mano);
+        break;
+    }
+    return ganador == 0 || ganador == 2;
+}
+
 double probabilidadesVictoria2Fija(Mano manos[NUMERO_JUGADORES_MUS - 2],
                                    int mano, Ronda ronda,
                                    Condicion condicionMano1,
                                    Condicion condicionMano2) {
-    if (manos == NULL || manos[0].cartas == NULL || manos[1].cartas == NULL)
+    if (!manosFijasValidas(manos) || mano < 0 ||
+        mano >= NUMERO_JUGADORES_MUS || ronda < GRANDE || ronda > PUNTO ||
+        condicionMano1 < NADA || condicionMano1 > PAR_Y_JUEGO ||
+        condicionMano2 < NADA || condicionMano2 > PAR_Y_JUEGO)
         return -1.0;
     // Retira de la baraja las cartas de las dos manos fijas
     ConteoMus conteo = BARAJA_MUS_COMPLETA;
@@ -435,13 +504,19 @@ double probabilidadesVictoria2Fija(Mano manos[NUMERO_JUGADORES_MUS - 2],
 
                                     construirMano(&mano2, valoresMano2);
                                     construirMano(&mano4, valoresMano4);
+                                    if (manoCumpleCondicion(
+                                            mano2, condicionMano1) != 1 ||
+                                        manoCumpleCondicion(
+                                            mano4, condicionMano2) != 1) {
+                                        temp.c[carta8] += 1;
+                                        continue;
+                                    }
                                     // Las manos fijas ocupan las
                                     // posiciones 0 y 2 (su pareja)
                                     Mano manos_prueba[4] = {manos[0], mano2,
                                                             manos[1], mano4};
-                                    int ganador =
-                                        ganadorGrande(manos_prueba, mano);
-                                    if (ganador == 0 || ganador == 2)
+                                    if (ganaParejaFija(manos_prueba, mano,
+                                                      ronda))
                                         exitos += peso;
                                     casos += peso;
                                     temp.c[carta8] += 1;

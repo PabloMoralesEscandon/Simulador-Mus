@@ -7,7 +7,7 @@
 
 #include "mus.h"
 
-/** Restricciones sobre las manos libres al simular (aún sin uso). */
+/** Restricciones sobre las manos rivales enumeradas. */
 typedef enum { NADA, TIENE_JUEGO, TIENE_31, PAR_Y_JUEGO } Condicion;
 
 /** Comprueba una restricción probabilística; devuelve 0, 1 o -1 si error. */
@@ -74,9 +74,11 @@ int simularPartidaMusConEstrategias(
  *  lance, fijadas sus manos y enumerando todos los repartos rivales.
  *  @param manos Manos fijas de los jugadores 0 y 2.
  *  @param mano Jugador que es mano (0-3).
- *  @param ronda Lance a evaluar (de momento solo GRANDE).
- *  @param condicionMano1 Restricción del jugador 1 (aún sin uso).
- *  @param condicionMano2 Restricción del jugador 3 (aún sin uso).
+ *  En PARES y JUEGO, un reparto sin ese lance cuenta como no ganado. PUNTO
+ *  solo se puede ganar cuando ninguno de los cuatro jugadores tiene juego.
+ *  @param ronda Lance a evaluar.
+ *  @param condicionMano1 Restricción del jugador 1.
+ *  @param condicionMano2 Restricción del jugador 3.
  *  @return Probabilidad en [0, 1], o -1.0 si las manos no son válidas. */
 double probabilidadesVictoria2Fija(Mano manos[NUMERO_JUGADORES_MUS - 2],
                                    int mano, Ronda ronda,

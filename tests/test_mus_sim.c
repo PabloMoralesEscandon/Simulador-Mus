@@ -209,6 +209,8 @@ static void testProbabilidadesCasosSeguros(void) {
     Mano seguras[2] = {manoDe(REY, REY, REY, REY), manoDe(AS, DOS, AS, DOS)};
     VERIFICAR(probabilidadesVictoria2Fija(seguras, 0, GRANDE, NADA, NADA) ==
               1.0);
+    VERIFICAR(probabilidadesVictoria2Fija(seguras, 0, PARES, NADA, NADA) ==
+              1.0);
     destruirMano(&seguras[0]);
     destruirMano(&seguras[1]);
 
@@ -217,8 +219,29 @@ static void testProbabilidadesCasosSeguros(void) {
     Mano perdedoras[2] = {manoDe(AS, AS, AS, AS), manoDe(DOS, DOS, DOS, DOS)};
     VERIFICAR(probabilidadesVictoria2Fija(perdedoras, 0, GRANDE, NADA, NADA) ==
               0.0);
+    VERIFICAR(probabilidadesVictoria2Fija(perdedoras, 0, CHICA, NADA, NADA) ==
+              1.0);
     destruirMano(&perdedoras[0]);
     destruirMano(&perdedoras[1]);
+}
+
+static void testProbabilidadesOtrosLances(void) {
+    Mano manos[2] = {manoDe(REY, REY, REY, AS),
+                     manoDe(CABALLO, SOTA, SIETE, SEIS)};
+    double chica = probabilidadesVictoria2Fija(manos, 0, CHICA, NADA, NADA);
+    double pares = probabilidadesVictoria2Fija(manos, 0, PARES, NADA, NADA);
+    double juego = probabilidadesVictoria2Fija(manos, 0, JUEGO, NADA, NADA);
+    double punto = probabilidadesVictoria2Fija(manos, 0, PUNTO, NADA, NADA);
+    VERIFICAR(chica >= 0.0 && chica <= 1.0);
+    VERIFICAR(pares >= 0.0 && pares <= 1.0);
+    VERIFICAR(juego == 1.0);
+    VERIFICAR(punto == 0.0);
+    VERIFICAR(probabilidadesVictoria2Fija(
+                  manos, 0, JUEGO, TIENE_JUEGO, TIENE_JUEGO) == 1.0);
+    VERIFICAR(probabilidadesVictoria2Fija(
+                  manos, 0, PUNTO, TIENE_JUEGO, TIENE_JUEGO) == 0.0);
+    destruirMano(&manos[0]);
+    destruirMano(&manos[1]);
 }
 
 static void testManoCumpleCondicion(void) {
@@ -267,6 +290,22 @@ static void testProbabilidadesEntradasInvalidas(void) {
     Mano sinCartas[2] = {{0}, {0}};
     VERIFICAR(probabilidadesVictoria2Fija(sinCartas, 0, GRANDE, NADA, NADA) ==
               -1.0);
+
+    Mano manos[2] = {manoDe(REY, REY, SOTA, SEIS),
+                     manoDe(CABALLO, SIETE, CUATRO, AS)};
+    VERIFICAR(probabilidadesVictoria2Fija(manos, -1, GRANDE, NADA, NADA) ==
+              -1.0);
+    VERIFICAR(probabilidadesVictoria2Fija(manos, 4, GRANDE, NADA, NADA) ==
+              -1.0);
+    VERIFICAR(probabilidadesVictoria2Fija(
+                  manos, 0, (Ronda)99, NADA, NADA) == -1.0);
+    VERIFICAR(probabilidadesVictoria2Fija(
+                  manos, 0, GRANDE, (Condicion)99, NADA) == -1.0);
+    manos[1].cartas[0] = manos[0].cartas[0];
+    VERIFICAR(probabilidadesVictoria2Fija(manos, 0, GRANDE, NADA, NADA) ==
+              -1.0);
+    destruirMano(&manos[0]);
+    destruirMano(&manos[1]);
 }
 
 static void testLogEntradasInvalidas(void) {
@@ -353,6 +392,7 @@ int main(void) {
     testSimularPartidaMusConEstrategias();
     testManoCumpleCondicion();
     testProbabilidadesCasosSeguros();
+    testProbabilidadesOtrosLances();
     testProbabilidadesRangoYMano();
     testProbabilidadesEntradasInvalidas();
     testLogEntradasInvalidas();
