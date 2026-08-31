@@ -106,6 +106,18 @@ static void testQuererEnviteMus(void) {
     VERIFICAR(quererEnviteMus(&envite, 1) == 1);
 }
 
+static void testNoQuererEnviteMus(void) {
+    VERIFICAR(noQuererEnviteMus(NULL, 0) == 1);
+    EnviteMus envite;
+    iniciarEnviteMus(&envite);
+    VERIFICAR(noQuererEnviteMus(&envite, 0) == 1);
+    VERIFICAR(envidarMus(&envite, 1, 2) == 0);
+    VERIFICAR(noQuererEnviteMus(&envite, 1) == 1);
+    VERIFICAR(noQuererEnviteMus(&envite, 0) == 0);
+    VERIFICAR(envite.estado == ENVITE_RECHAZADO);
+    VERIFICAR(noQuererEnviteMus(&envite, 0) == 1);
+}
+
 static void testRepartirManos(void) {
     VERIFICAR(repartirManos(NULL) == 1);
 
@@ -319,6 +331,7 @@ int main(void) {
     testIniciarEnviteMus();
     testEnvidarMus();
     testQuererEnviteMus();
+    testNoQuererEnviteMus();
     testRepartirManos();
     testManoSeDescarta();
     testTodosDanMus();
