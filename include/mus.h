@@ -197,7 +197,7 @@ int iniciarPartidaMus(PartidaMus *partida);
 /** Libera toda la memoria de la partida. */
 int destruirPartidaMus(PartidaMus *partida);
 
-/** Reconstruye el mazo con la pila de descartes barajada. */
+/** Sustituye el mazo agotado por la pila de descartes barajada. */
 int barajarDescartes(PartidaMus *partida);
 
 /** Rellena una mano robando del mazo; recicla los descartes si se agota. */
@@ -223,7 +223,7 @@ int descartarManosMus(
  *  Devuelve 1 o 2 si hay ganador, 0 si la partida sigue y -1 si hay error. */
 int puntuarRonda(PartidaMus *partida, int ganador, int tantos);
 
-/** Baraja el mazo completo y reinicia el cursor de robo. */
+/** Reconstruye y baraja las 40 cartas entre manos; vacía los descartes. */
 int resetearMazo(PartidaMus *partida);
 
 #endif

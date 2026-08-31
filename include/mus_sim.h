@@ -34,7 +34,7 @@ typedef AccionEnviteMus (*DecisionEnvite)(const Mano *mano, int jugador,
                                           const EnviteMus *envite,
                                           void *contexto);
 
-/** Decisiones inyectables de un jugador durante la fase de mus. */
+/** Decisiones inyectables de un jugador durante toda la mano. */
 typedef struct {
     DecisionMus decidirMus;
     SeleccionDescartes elegirDescartes;
@@ -52,13 +52,13 @@ int jugarLanceEnvite(
     const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS],
     EnviteMus *resultado);
 
-/** Juega una ronda: reparte y puntúa los cuatro lances (1 tanto cada uno)
- *  y pasa la mano al siguiente jugador.
+/** Juega una ronda con la estrategia pasiva: corta mus y pasa los envites.
+ *  Reparte, tantea los lances aplicables y pasa la mano al siguiente jugador.
  *  @return 0 si la partida sigue, 1 o 2 si esa pareja llega a 40, -1 si
  *  error. */
 int simularRondaMus(PartidaMus *partida);
 
-/** Juega una ronda usando estrategias para decidir mus y descartes. */
+/** Juega una ronda usando estrategias para mus, descartes y envites. */
 int simularRondaMusConEstrategias(
     PartidaMus *partida,
     const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS]);
