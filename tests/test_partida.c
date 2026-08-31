@@ -75,6 +75,25 @@ static void testIniciarEnviteMus(void) {
     VERIFICAR(envite.parejaApostadora == -1);
 }
 
+static void testEnvidarMus(void) {
+    VERIFICAR(envidarMus(NULL, 0, 2) == 1);
+    EnviteMus envite;
+    iniciarEnviteMus(&envite);
+    VERIFICAR(envidarMus(&envite, -1, 2) == 1);
+    VERIFICAR(envidarMus(&envite, 0, 1) == 1);
+    VERIFICAR(envidarMus(&envite, 0, 2) == 0);
+    VERIFICAR(envite.estado == ENVITE_PENDIENTE);
+    VERIFICAR(envite.cantidad == 2);
+    VERIFICAR(envite.cantidadAnterior == 1);
+    VERIFICAR(envite.parejaApostadora == 0);
+    VERIFICAR(envidarMus(&envite, 0, 4) == 1);
+    VERIFICAR(envidarMus(&envite, 1, 2) == 1);
+    VERIFICAR(envidarMus(&envite, 1, 6) == 0);
+    VERIFICAR(envite.cantidad == 6);
+    VERIFICAR(envite.cantidadAnterior == 2);
+    VERIFICAR(envite.parejaApostadora == 1);
+}
+
 static void testRepartirManos(void) {
     VERIFICAR(repartirManos(NULL) == 1);
 
@@ -286,6 +305,7 @@ int main(void) {
     srand(88);
     testIniciarDestruirPartida();
     testIniciarEnviteMus();
+    testEnvidarMus();
     testRepartirManos();
     testManoSeDescarta();
     testTodosDanMus();

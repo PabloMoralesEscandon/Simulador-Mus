@@ -78,6 +78,9 @@ int reiniciarEnvitesRonda(EnviteRonda *envites);
 /** Inicializa una negociación de envite al paso. */
 int iniciarEnviteMus(EnviteMus *envite);
 
+/** Abre o sube un envite hasta una cantidad total mínima de dos tantos. */
+int envidarMus(EnviteMus *envite, int pareja, int cantidadTotal);
+
 /** Reserva una mano de TAMANO_MANO_MUS cartas. */
 int crearManoMus(Mano *mano);
 

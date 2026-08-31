@@ -360,6 +360,25 @@ int iniciarEnviteMus(EnviteMus *envite) {
     return 0;
 }
 
+int envidarMus(EnviteMus *envite, int pareja, int cantidadTotal) {
+    if (envite == NULL || pareja < 0 || pareja > 1 || cantidadTotal < 2)
+        return 1;
+    if (envite->estado == ENVITE_AL_PASO) {
+        envite->cantidadAnterior = 1;
+    } else if (envite->estado == ENVITE_PENDIENTE) {
+        if (pareja == envite->parejaApostadora ||
+            cantidadTotal <= envite->cantidad)
+            return 1;
+        envite->cantidadAnterior = envite->cantidad;
+    } else {
+        return 1;
+    }
+    envite->estado = ENVITE_PENDIENTE;
+    envite->cantidad = cantidadTotal;
+    envite->parejaApostadora = pareja;
+    return 0;
+}
+
 int iniciarPartidaMus(PartidaMus *partida) {
     if (partida == NULL)
         return 1;
