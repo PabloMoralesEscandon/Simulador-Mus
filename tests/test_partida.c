@@ -4,6 +4,17 @@
 #include "mus.h"
 #include "utiles_test.h"
 
+static Mano manoDe(int n1, int n2, int n3, int n4) {
+    Mano mano;
+    crearManoMus(&mano);
+    int numeros[TAMANO_MANO_MUS] = {n1, n2, n3, n4};
+    for (size_t i = 0; i < mano.tamano; i++) {
+        mano.cartas[i].numero = numeros[i];
+        mano.cartas[i].palo = (int)i;
+    }
+    return mano;
+}
+
 // Devuelve cuántas cartas repetidas hay entre las 4 manos, verificando de
 // paso que todas son cartas válidas de la baraja de 40
 static int duplicadosEnManos(PartidaMus *partida) {
@@ -121,11 +132,43 @@ static void testRecicladoSinDuplicados(void) {
     destruirPartidaMus(&partida);
 }
 
+static void testPuntuarPares(void) {
+    VERIFICAR(puntuarPares(NULL) == -1);
+
+    PartidaMus partida;
+    iniciarPartidaMus(&partida);
+    for (int i = 0; i < NUMERO_JUGADORES_MUS; i++)
+        destruirMano(&partida.manos[i]);
+    partida.manos[0] = manoDe(REY, REY, AS, AS);       // Dúplex: 3
+    partida.manos[1] = manoDe(CABALLO, CABALLO, AS, 4);// Par: 1
+    partida.manos[2] = manoDe(SOTA, SOTA, SOTA, 4);    // Medias: 2
+    partida.manos[3] = manoDe(SIETE, SIETE, AS, 4);    // Par: 1
+    partida.envites_actuales.pares = 4;
+    VERIFICAR(puntuarPares(&partida) == 0);
+    VERIFICAR(partida.tantos[0] == 9); // Envite 4 + dúplex 3 + medias 2
+    VERIFICAR(partida.tantos[1] == 0);
+
+    partida.envites_actuales.pares = 0;
+    partida.manos[0].cartas[1].numero = CABALLO;
+    partida.manos[0].cartas[3].numero = CUATRO;
+    partida.manos[2].cartas[1].numero = CABALLO;
+    partida.manos[2].cartas[2].numero = SIETE;
+    VERIFICAR(parejaTienePares(partida.manos, 0) == 0);
+    VERIFICAR(puntuarPares(&partida) == 0);
+    VERIFICAR(partida.tantos[0] == 9);
+    VERIFICAR(partida.tantos[1] == 2);
+    partida.envites_actuales.pares = 2;
+    VERIFICAR(puntuarPares(&partida) == -1);
+    VERIFICAR(partida.tantos[1] == 2);
+    destruirPartidaMus(&partida);
+}
+
 int main(void) {
     srand(88);
     testIniciarDestruirPartida();
     testRepartirManos();
     testManoSeDescarta();
     testRecicladoSinDuplicados();
+    testPuntuarPares();
     return resumenPruebas("test_partida");
 }

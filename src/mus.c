@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <stdlib.h>
 
 #include "baraja_espanola.h"
@@ -186,6 +187,25 @@ int parejaTienePares(Mano manos[NUMERO_JUGADORES_MUS], int pareja) {
         return -1;
     return tipoPares(manos[pareja]) != NO_PAR ||
            tipoPares(manos[pareja + 2]) != NO_PAR;
+}
+
+int puntuarPares(PartidaMus *partida) {
+    if (partida == NULL || partida->envites_actuales.pares > INT_MAX)
+        return -1;
+
+    int pares0 = parejaTienePares(partida->manos, 0);
+    int pares1 = parejaTienePares(partida->manos, 1);
+    if (!pares0 && !pares1)
+        return partida->envites_actuales.pares == 0 ? 0 : -1;
+    if ((!pares0 || !pares1) && partida->envites_actuales.pares != 0)
+        return -1;
+
+    int ganador = ganadorPar(partida->manos, partida->mano);
+    int pareja = ganador % 2;
+    int tantos = tantosPares(partida->manos[pareja]) +
+                 tantosPares(partida->manos[pareja + 2]) +
+                 (int)partida->envites_actuales.pares;
+    return puntuarRonda(partida, ganador, tantos);
 }
 
 int valorPuntoMus(Carta carta) {
