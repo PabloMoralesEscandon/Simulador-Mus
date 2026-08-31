@@ -12,14 +12,6 @@ const ConteoMus BARAJA_MUS_COMPLETA = {.c = {8, 4, 4, 4, 4, 4, 4, 8}};
 static const int NUMERO_ESPANOL_DESDE_MUS[CERDO + 1] = {
     AS, CUATRO, CINCO, SEIS, SIETE, SOTA, CABALLO, REY};
 
-/** Resuelve un lance, lo loguea y lo puntúa con puntuarRonda. */
-static int puntuarLance(PartidaMus *partida, const char *lance,
-                        int (*ganadorLance)(Mano[NUMERO_JUGADORES_MUS], int)) {
-    int ganador = ganadorLance(partida->manos, partida->mano);
-    logGanadorLance(LOG_LANCES, lance, ganador);
-    return puntuarRonda(partida, ganador, 1);
-}
-
 int simularRondaMus(PartidaMus *partida) {
     if (partida == NULL)
         return -1;
@@ -28,18 +20,36 @@ int simularRondaMus(PartidaMus *partida) {
     if (repartirManos(partida))
         return -1;
     logManos(LOG_LANCES, partida);
-    int ganador = puntuarLance(partida, "Grande", ganadorGrande);
-    if (ganador)
-        return ganador;
-    ganador = puntuarLance(partida, "Chica", ganadorChica);
-    if (ganador)
-        return ganador;
-    ganador = puntuarLance(partida, "Pares", ganadorPar);
-    if (ganador)
-        return ganador;
-    ganador = puntuarLance(partida, "Juego", ganadorJuego);
-    if (ganador)
-        return ganador;
+    logGanadorLance(LOG_LANCES, "Grande",
+                    ganadorGrande(partida->manos, partida->mano));
+    int resultado = puntuarGrande(partida);
+    if (resultado)
+        return resultado;
+
+    logGanadorLance(LOG_LANCES, "Chica",
+                    ganadorChica(partida->manos, partida->mano));
+    resultado = puntuarChica(partida);
+    if (resultado)
+        return resultado;
+
+    if (parejaTienePares(partida->manos, 0) ||
+        parejaTienePares(partida->manos, 1))
+        logGanadorLance(LOG_LANCES, "Pares",
+                        ganadorPar(partida->manos, partida->mano));
+    resultado = puntuarPares(partida);
+    if (resultado)
+        return resultado;
+
+    if (parejaTieneJuego(partida->manos, 0) ||
+        parejaTieneJuego(partida->manos, 1))
+        logGanadorLance(LOG_LANCES, "Juego",
+                        ganadorJuego(partida->manos, partida->mano));
+    else
+        logGanadorLance(LOG_LANCES, "Punto",
+                        ganadorPunto(partida->manos, partida->mano));
+    resultado = puntuarJuegoOPunto(partida);
+    if (resultado)
+        return resultado;
     logTantos(LOG_RONDAS, partida);
     partida->mano = (partida->mano + 1) % NUMERO_JUGADORES_MUS;
     return 0;

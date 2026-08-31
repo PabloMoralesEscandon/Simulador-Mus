@@ -31,8 +31,10 @@ static void testSimularRondaMus(void) {
     partida.envites_actuales.juego = 8;
     partida.envites_actuales.punto = 10;
     VERIFICAR(simularRondaMus(&partida) == 0);
-    // Una ronda reparte 4 lances de 1 tanto y pasa la mano al siguiente
-    VERIFICAR(partida.tantos[0] + partida.tantos[1] == 4);
+    // Grande y chica valen al menos un tanto; pares y juego dependen de
+    // las jugadas presentes, y el punto vale uno si nadie tiene juego.
+    VERIFICAR(partida.tantos[0] + partida.tantos[1] >= 3);
+    VERIFICAR(partida.tantos[0] + partida.tantos[1] <= 14);
     VERIFICAR(partida.mano == 1);
     VERIFICAR(partida.envites_actuales.grande == 0);
     VERIFICAR(partida.envites_actuales.chica == 0);
@@ -57,8 +59,7 @@ static void testPartidaPorRondas(void) {
     VERIFICAR(ganador == 1 || ganador == 2);
     VERIFICAR(partida.tantos[ganador - 1] >= 40);
     VERIFICAR(partida.tantos[2 - ganador] < 40);
-    // Con 4 tantos por ronda hacen falta al menos 10 rondas para llegar a 40
-    VERIFICAR(rondas >= 10);
+    VERIFICAR(rondas >= 3);
     VERIFICAR(destruirPartidaMus(&partida) == 0);
 }
 
