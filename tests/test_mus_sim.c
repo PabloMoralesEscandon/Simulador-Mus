@@ -190,6 +190,19 @@ static void testSimularPartidaMus(void) {
         VERIFICAR(simularPartidaMus() == 0);
 }
 
+static void testSimularPartidaMusConEstrategias(void) {
+    VERIFICAR(simularPartidaMusConEstrategias(NULL) == 1);
+    ContextoMusPrueba contextos[NUMERO_JUGADORES_MUS] = {{0}};
+    EstrategiaMus estrategias[NUMERO_JUGADORES_MUS] = {{0}};
+    for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++) {
+        estrategias[jugador].decidirMus = darMusUnaVez;
+        estrategias[jugador].elegirDescartes = descartarPrimera;
+        estrategias[jugador].decidirEnvite = decidirEnvitePrueba;
+        estrategias[jugador].contexto = &contextos[jugador];
+    }
+    VERIFICAR(simularPartidaMusConEstrategias(estrategias) == 0);
+}
+
 static void testProbabilidadesCasosSeguros(void) {
     // Cuatro reyes siendo mano ganan la grande siempre (los empates con
     // cuatro treses los resuelve la posición)
@@ -316,6 +329,7 @@ int main(void) {
     testSimularRondaMusConEstrategias();
     testPartidaPorRondas();
     testSimularPartidaMus();
+    testSimularPartidaMusConEstrategias();
     testProbabilidadesCasosSeguros();
     testProbabilidadesRangoYMano();
     testProbabilidadesEntradasInvalidas();

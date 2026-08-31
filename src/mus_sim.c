@@ -269,7 +269,10 @@ int simularRondaMus(PartidaMus *partida) {
     return simularRondaMusConEstrategias(partida, estrategias);
 }
 
-int simularPartidaMus() {
+int simularPartidaMusConEstrategias(
+    const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS]) {
+    if (estrategias == NULL)
+        return 1;
     PartidaMus partida = {0};
     if (iniciarPartidaMus(&partida))
         return 1;
@@ -282,7 +285,8 @@ int simularPartidaMus() {
         }
         ronda += 1;
         logNumeroRonda(LOG_RONDAS, ronda);
-    } while (!(ganador = simularRondaMus(&partida)));
+    } while (!(ganador =
+                   simularRondaMusConEstrategias(&partida, estrategias)));
     int resultado = 0;
     if (ganador == 1 || ganador == 2) {
         logGanadorPartida(LOG_RESULTADO, &partida);
@@ -291,6 +295,16 @@ int simularPartidaMus() {
     }
     destruirPartidaMus(&partida);
     return resultado;
+}
+
+int simularPartidaMus() {
+    EstrategiaMus estrategias[NUMERO_JUGADORES_MUS] = {{0}};
+    for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++) {
+        estrategias[jugador].decidirMus = cortarMus;
+        estrategias[jugador].elegirDescartes = sinDescartes;
+        estrategias[jugador].decidirEnvite = pasarEnvite;
+    }
+    return simularPartidaMusConEstrategias(estrategias);
 }
 
 /** Rellena mano con las cartas representativas de esas clases de valor. */

@@ -63,6 +63,10 @@ int simularRondaMusConEstrategias(
 /** Simula una partida completa a 40 tantos, logueando el progreso. */
 int simularPartidaMus();
 
+/** Simula una partida completa usando las cuatro estrategias indicadas. */
+int simularPartidaMusConEstrategias(
+    const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS]);
+
 /** Probabilidad exacta de que la pareja de los jugadores 0 y 2 gane el
  *  lance, fijadas sus manos y enumerando todos los repartos rivales.
  *  @param manos Manos fijas de los jugadores 0 y 2.
