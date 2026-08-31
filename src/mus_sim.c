@@ -12,6 +12,23 @@ const ConteoMus BARAJA_MUS_COMPLETA = {.c = {8, 4, 4, 4, 4, 4, 4, 8}};
 static const int NUMERO_ESPANOL_DESDE_MUS[CERDO + 1] = {
     AS, CUATRO, CINCO, SEIS, SIETE, SOTA, CABALLO, REY};
 
+int manoCumpleCondicion(Mano mano, Condicion condicion) {
+    if (mano.cartas == NULL || mano.tamano != TAMANO_MANO_MUS)
+        return -1;
+    switch (condicion) {
+    case NADA:
+        return 1;
+    case TIENE_JUEGO:
+        return tieneJuego(mano);
+    case TIENE_31:
+        return sumaMano(mano) == 31;
+    case PAR_Y_JUEGO:
+        return tipoPares(mano) != NO_PAR && tieneJuego(mano);
+    default:
+        return -1;
+    }
+}
+
 int jugarFaseMus(PartidaMus *partida,
                  const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS]) {
     if (partida == NULL || estrategias == NULL || partida->mano < 0 ||

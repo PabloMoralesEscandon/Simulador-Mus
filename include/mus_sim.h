@@ -10,6 +10,9 @@
 /** Restricciones sobre las manos libres al simular (aún sin uso). */
 typedef enum { NADA, TIENE_JUEGO, TIENE_31, PAR_Y_JUEGO } Condicion;
 
+/** Comprueba una restricción probabilística; devuelve 0, 1 o -1 si error. */
+int manoCumpleCondicion(Mano mano, Condicion condicion);
+
 /** Cartas disponibles de cada clase NumeroMus. */
 typedef struct {
     int c[CERDO + 1];

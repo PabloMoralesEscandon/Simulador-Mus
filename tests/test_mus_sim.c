@@ -221,6 +221,27 @@ static void testProbabilidadesCasosSeguros(void) {
     destruirMano(&perdedoras[1]);
 }
 
+static void testManoCumpleCondicion(void) {
+    Mano juego31 = manoDe(REY, REY, REY, AS);
+    Mano paresSinJuego = manoDe(AS, AS, CUATRO, CINCO);
+    Mano sinParesConJuego = manoDe(REY, CABALLO, SOTA, AS);
+    Mano invalida = {0};
+    VERIFICAR(manoCumpleCondicion(invalida, NADA) == -1);
+    VERIFICAR(manoCumpleCondicion(juego31, NADA) == 1);
+    VERIFICAR(manoCumpleCondicion(juego31, TIENE_JUEGO) == 1);
+    VERIFICAR(manoCumpleCondicion(juego31, TIENE_31) == 1);
+    VERIFICAR(manoCumpleCondicion(juego31, PAR_Y_JUEGO) == 1);
+    VERIFICAR(manoCumpleCondicion(paresSinJuego, TIENE_JUEGO) == 0);
+    VERIFICAR(manoCumpleCondicion(paresSinJuego, PAR_Y_JUEGO) == 0);
+    VERIFICAR(manoCumpleCondicion(sinParesConJuego, TIENE_JUEGO) == 1);
+    VERIFICAR(manoCumpleCondicion(sinParesConJuego, TIENE_31) == 1);
+    VERIFICAR(manoCumpleCondicion(sinParesConJuego, PAR_Y_JUEGO) == 0);
+    VERIFICAR(manoCumpleCondicion(juego31, (Condicion)99) == -1);
+    destruirMano(&juego31);
+    destruirMano(&paresSinJuego);
+    destruirMano(&sinParesConJuego);
+}
+
 static void testProbabilidadesRangoYMano(void) {
     Mano manos[2] = {manoDe(TRES, REY, SOTA, SEIS),
                      manoDe(REY, SIETE, CUATRO, AS)};
@@ -330,6 +351,7 @@ int main(void) {
     testPartidaPorRondas();
     testSimularPartidaMus();
     testSimularPartidaMusConEstrategias();
+    testManoCumpleCondicion();
     testProbabilidadesCasosSeguros();
     testProbabilidadesRangoYMano();
     testProbabilidadesEntradasInvalidas();
