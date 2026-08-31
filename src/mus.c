@@ -14,6 +14,11 @@ static const int PESO_CHICA[CERDO + 1] = {10000000, 1000000, 100000, 10000,
 // Valores de juego ordenados de peor a mejor: 33 < 34 < ... < 40 < 32 < 31
 static const int ORDEN_PUNTO[8] = {33, 34, 35, 36, 37, 40, 32, 31};
 
+static int numeroJugadoresValido(int numeroJugadores) {
+    return numeroJugadores == MUS_DOS_JUGADORES ||
+           numeroJugadores == MUS_CUATRO_JUGADORES;
+}
+
 int crearManoMus(Mano *mano) { return crearMano(mano, TAMANO_MANO_MUS); }
 
 int valorMus(Carta carta) {
@@ -57,11 +62,14 @@ int claveGrande(Mano mano) {
     return clave;
 }
 
-int ganadorGrande(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
+int ganadorGrandeConJugadores(Mano manos[], int numeroJugadores, int mano) {
+    if (manos == NULL || !numeroJugadoresValido(numeroJugadores) || mano < 0 ||
+        mano >= numeroJugadores)
+        return -1;
     int max = claveGrande(manos[mano]);
     int ganador = mano;
-    for (size_t i = 0; i < NUMERO_JUGADORES_MUS; i++) {
-        int j = (mano + i) % NUMERO_JUGADORES_MUS;
+    for (int i = 1; i < numeroJugadores; i++) {
+        int j = (mano + i) % numeroJugadores;
         int valor = claveGrande(manos[j]);
         if (valor > max) {
             max = valor;
@@ -71,12 +79,18 @@ int ganadorGrande(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
     return ganador;
 }
 
+int ganadorGrande(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
+    return ganadorGrandeConJugadores(manos, MUS_CUATRO_JUGADORES, mano);
+}
+
 static int puntuarLanceSimple(
     PartidaMus *partida, int envite,
-    int (*ganadorLance)(Mano[NUMERO_JUGADORES_MUS], int)) {
-    if (partida == NULL || ganadorLance == NULL || envite < 0)
+    int (*ganadorLance)(Mano[], int, int)) {
+    if (partida == NULL || ganadorLance == NULL || envite < 0 ||
+        !numeroJugadoresValido(partida->numeroJugadores))
         return -1;
-    int ganador = ganadorLance(partida->manos, partida->mano);
+    int ganador = ganadorLance(partida->manos, partida->numeroJugadores,
+                               partida->mano);
     int tantos = envite == 0 ? 1 : envite;
     return puntuarRonda(partida, ganador, tantos);
 }
@@ -85,7 +99,7 @@ int puntuarGrande(PartidaMus *partida) {
     if (partida == NULL)
         return -1;
     return puntuarLanceSimple(partida, partida->envites_actuales.grande,
-                              ganadorGrande);
+                              ganadorGrandeConJugadores);
 }
 
 int claveChica(Mano mano) {
@@ -96,11 +110,14 @@ int claveChica(Mano mano) {
     return clave;
 }
 
-int ganadorChica(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
+int ganadorChicaConJugadores(Mano manos[], int numeroJugadores, int mano) {
+    if (manos == NULL || !numeroJugadoresValido(numeroJugadores) || mano < 0 ||
+        mano >= numeroJugadores)
+        return -1;
     int max = claveChica(manos[mano]);
     int ganador = mano;
-    for (size_t i = 0; i < NUMERO_JUGADORES_MUS; i++) {
-        int j = (mano + i) % NUMERO_JUGADORES_MUS;
+    for (int i = 1; i < numeroJugadores; i++) {
+        int j = (mano + i) % numeroJugadores;
         int valor = claveChica(manos[j]);
         if (valor > max) {
             max = valor;
@@ -110,11 +127,15 @@ int ganadorChica(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
     return ganador;
 }
 
+int ganadorChica(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
+    return ganadorChicaConJugadores(manos, MUS_CUATRO_JUGADORES, mano);
+}
+
 int puntuarChica(PartidaMus *partida) {
     if (partida == NULL)
         return -1;
     return puntuarLanceSimple(partida, partida->envites_actuales.chica,
-                              ganadorChica);
+                              ganadorChicaConJugadores);
 }
 
 int clavePar(Mano mano) {
@@ -191,11 +212,14 @@ int tantosPares(Mano mano) {
     }
 }
 
-int ganadorPar(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
+int ganadorParConJugadores(Mano manos[], int numeroJugadores, int mano) {
+    if (manos == NULL || !numeroJugadoresValido(numeroJugadores) || mano < 0 ||
+        mano >= numeroJugadores)
+        return -1;
     int max = clavePar(manos[mano]);
     int ganador = mano;
-    for (size_t i = 0; i < NUMERO_JUGADORES_MUS; i++) {
-        int j = (mano + i) % NUMERO_JUGADORES_MUS;
+    for (int i = 1; i < numeroJugadores; i++) {
+        int j = (mano + i) % numeroJugadores;
         int valor = clavePar(manos[j]);
         if (valor > max) {
             max = valor;
@@ -205,20 +229,35 @@ int ganadorPar(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
     return ganador;
 }
 
-int parejaTienePares(Mano manos[NUMERO_JUGADORES_MUS], int pareja) {
-    if (manos == NULL || pareja < 0 || pareja > 1)
+int ganadorPar(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
+    return ganadorParConJugadores(manos, MUS_CUATRO_JUGADORES, mano);
+}
+
+int equipoTienePares(Mano manos[], int numeroJugadores, int equipo) {
+    if (manos == NULL || !numeroJugadoresValido(numeroJugadores) ||
+        equipo < 0 || equipo > 1)
         return -1;
-    return tipoPares(manos[pareja]) != NO_PAR ||
-           tipoPares(manos[pareja + 2]) != NO_PAR;
+    for (int jugador = equipo; jugador < numeroJugadores; jugador += 2)
+        if (tipoPares(manos[jugador]) != NO_PAR)
+            return 1;
+    return 0;
+}
+
+int parejaTienePares(Mano manos[NUMERO_JUGADORES_MUS], int pareja) {
+    return equipoTienePares(manos, MUS_CUATRO_JUGADORES, pareja);
 }
 
 int puntuarParesDePareja(PartidaMus *partida, int pareja, int tantosEnvite) {
-    if (partida == NULL || pareja < 0 || pareja > 1 || tantosEnvite < 0 ||
-        parejaTienePares(partida->manos, pareja) != 1)
+    if (partida == NULL || !numeroJugadoresValido(partida->numeroJugadores) ||
+        pareja < 0 || pareja > 1 || tantosEnvite < 0 ||
+        equipoTienePares(partida->manos, partida->numeroJugadores, pareja) !=
+            1)
         return -1;
 
-    int tantos = tantosPares(partida->manos[pareja]) +
-                 tantosPares(partida->manos[pareja + 2]);
+    int tantos = 0;
+    for (int jugador = pareja; jugador < partida->numeroJugadores;
+         jugador += 2)
+        tantos += tantosPares(partida->manos[jugador]);
     if (tantosEnvite >= 40 - tantos)
         tantos = 40;
     else
@@ -230,14 +269,18 @@ int puntuarPares(PartidaMus *partida) {
     if (partida == NULL || partida->envites_actuales.pares < 0)
         return -1;
 
-    int pares0 = parejaTienePares(partida->manos, 0);
-    int pares1 = parejaTienePares(partida->manos, 1);
+    if (!numeroJugadoresValido(partida->numeroJugadores))
+        return -1;
+    int pares0 = equipoTienePares(partida->manos, partida->numeroJugadores, 0);
+    int pares1 = equipoTienePares(partida->manos, partida->numeroJugadores, 1);
     if (!pares0 && !pares1)
         return partida->envites_actuales.pares == 0 ? 0 : -1;
     if ((!pares0 || !pares1) && partida->envites_actuales.pares != 0)
         return -1;
 
-    int ganador = ganadorPar(partida->manos, partida->mano);
+    int ganador = ganadorParConJugadores(partida->manos,
+                                         partida->numeroJugadores,
+                                         partida->mano);
     int pareja = ganador % 2;
     return puntuarParesDePareja(partida, pareja,
                                 partida->envites_actuales.pares);
@@ -285,25 +328,38 @@ int tantosJuego(Mano mano) {
     return 0;
 }
 
-int parejaTieneJuego(Mano manos[NUMERO_JUGADORES_MUS], int pareja) {
-    if (manos == NULL || pareja < 0 || pareja > 1)
+int equipoTieneJuego(Mano manos[], int numeroJugadores, int equipo) {
+    if (manos == NULL || !numeroJugadoresValido(numeroJugadores) ||
+        equipo < 0 || equipo > 1)
         return -1;
-    return tieneJuego(manos[pareja]) || tieneJuego(manos[pareja + 2]);
+    for (int jugador = equipo; jugador < numeroJugadores; jugador += 2)
+        if (tieneJuego(manos[jugador]))
+            return 1;
+    return 0;
+}
+
+int parejaTieneJuego(Mano manos[NUMERO_JUGADORES_MUS], int pareja) {
+    return equipoTieneJuego(manos, MUS_CUATRO_JUGADORES, pareja);
 }
 
 int puntuarJuegoOPuntoDePareja(PartidaMus *partida, Ronda ronda, int pareja,
                                int tantosEnvite) {
-    if (partida == NULL || pareja < 0 || pareja > 1 || tantosEnvite < 0)
+    if (partida == NULL || !numeroJugadoresValido(partida->numeroJugadores) ||
+        pareja < 0 || pareja > 1 || tantosEnvite < 0)
         return -1;
     int tantos = 0;
     if (ronda == JUEGO) {
-        if (parejaTieneJuego(partida->manos, pareja) != 1)
+        if (equipoTieneJuego(partida->manos, partida->numeroJugadores,
+                             pareja) != 1)
             return -1;
-        tantos = tantosJuego(partida->manos[pareja]) +
-                 tantosJuego(partida->manos[pareja + 2]);
+        for (int jugador = pareja; jugador < partida->numeroJugadores;
+             jugador += 2)
+            tantos += tantosJuego(partida->manos[jugador]);
     } else if (ronda == PUNTO) {
-        if (parejaTieneJuego(partida->manos, 0) != 0 ||
-            parejaTieneJuego(partida->manos, 1) != 0)
+        if (equipoTieneJuego(partida->manos, partida->numeroJugadores, 0) !=
+                0 ||
+            equipoTieneJuego(partida->manos, partida->numeroJugadores, 1) !=
+                0)
             return -1;
         tantos = 1;
     } else {
@@ -321,14 +377,17 @@ int puntuarJuegoOPunto(PartidaMus *partida) {
         partida->envites_actuales.punto < 0)
         return -1;
 
-    int juego0 = parejaTieneJuego(partida->manos, 0);
-    int juego1 = parejaTieneJuego(partida->manos, 1);
+    if (!numeroJugadoresValido(partida->numeroJugadores))
+        return -1;
+    int juego0 = equipoTieneJuego(partida->manos, partida->numeroJugadores, 0);
+    int juego1 = equipoTieneJuego(partida->manos, partida->numeroJugadores, 1);
     if (juego0 || juego1) {
         if (partida->envites_actuales.punto != 0)
             return -1;
         if ((!juego0 || !juego1) && partida->envites_actuales.juego != 0)
             return -1;
-        int ganador = ganadorJuego(partida->manos, partida->mano);
+        int ganador = ganadorJuegoConJugadores(
+            partida->manos, partida->numeroJugadores, partida->mano);
         int pareja = ganador % 2;
         return puntuarJuegoOPuntoDePareja(
             partida, JUEGO, pareja, partida->envites_actuales.juego);
@@ -336,7 +395,8 @@ int puntuarJuegoOPunto(PartidaMus *partida) {
 
     if (partida->envites_actuales.juego != 0)
         return -1;
-    int ganador = ganadorPunto(partida->manos, partida->mano);
+    int ganador = ganadorPuntoConJugadores(
+        partida->manos, partida->numeroJugadores, partida->mano);
     return puntuarJuegoOPuntoDePareja(
         partida, PUNTO, ganador % 2, partida->envites_actuales.punto);
 }
@@ -350,11 +410,14 @@ static int claveJuego(Mano mano) {
     return -1;
 }
 
-int ganadorJuego(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
+int ganadorJuegoConJugadores(Mano manos[], int numeroJugadores, int mano) {
+    if (manos == NULL || !numeroJugadoresValido(numeroJugadores) || mano < 0 ||
+        mano >= numeroJugadores)
+        return -1;
     int max = claveJuego(manos[mano]);
     int ganador = mano;
-    for (size_t i = 0; i < NUMERO_JUGADORES_MUS; i++) {
-        int j = (mano + i) % NUMERO_JUGADORES_MUS;
+    for (int i = 1; i < numeroJugadores; i++) {
+        int j = (mano + i) % numeroJugadores;
         int valor = claveJuego(manos[j]);
         if (valor > max) {
             max = valor;
@@ -362,15 +425,22 @@ int ganadorJuego(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
         }
     }
     if (max == -1)
-        return ganadorPunto(manos, mano);
+        return ganadorPuntoConJugadores(manos, numeroJugadores, mano);
     return ganador;
 }
 
-int ganadorPunto(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
+int ganadorJuego(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
+    return ganadorJuegoConJugadores(manos, MUS_CUATRO_JUGADORES, mano);
+}
+
+int ganadorPuntoConJugadores(Mano manos[], int numeroJugadores, int mano) {
+    if (manos == NULL || !numeroJugadoresValido(numeroJugadores) || mano < 0 ||
+        mano >= numeroJugadores)
+        return -1;
     int max = sumaMano(manos[mano]);
     int ganador = mano;
-    for (size_t i = 0; i < NUMERO_JUGADORES_MUS; i++) {
-        int j = (mano + i) % NUMERO_JUGADORES_MUS;
+    for (int i = 1; i < numeroJugadores; i++) {
+        int j = (mano + i) % numeroJugadores;
         int valor = sumaMano(manos[j]);
         if (valor > max) {
             max = valor;
@@ -378,6 +448,10 @@ int ganadorPunto(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
         }
     }
     return ganador;
+}
+
+int ganadorPunto(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
+    return ganadorPuntoConJugadores(manos, MUS_CUATRO_JUGADORES, mano);
 }
 
 int reiniciarEnvitesRonda(EnviteRonda *envites) {
@@ -507,32 +581,45 @@ int resolverOrdagoMus(PartidaMus *partida, Ronda ronda,
     if (partida == NULL || envite == NULL ||
         envite->estado != ORDAGO_ACEPTADO || ronda < GRANDE || ronda > PUNTO)
         return -1;
+    if (!numeroJugadoresValido(partida->numeroJugadores))
+        return -1;
 
     int ganador = -1;
     switch (ronda) {
     case GRANDE:
-        ganador = ganadorGrande(partida->manos, partida->mano);
+        ganador = ganadorGrandeConJugadores(
+            partida->manos, partida->numeroJugadores, partida->mano);
         break;
     case CHICA:
-        ganador = ganadorChica(partida->manos, partida->mano);
+        ganador = ganadorChicaConJugadores(
+            partida->manos, partida->numeroJugadores, partida->mano);
         break;
     case PARES:
-        if (parejaTienePares(partida->manos, 0) != 1 ||
-            parejaTienePares(partida->manos, 1) != 1)
+        if (equipoTienePares(partida->manos, partida->numeroJugadores, 0) !=
+                1 ||
+            equipoTienePares(partida->manos, partida->numeroJugadores, 1) !=
+                1)
             return -1;
-        ganador = ganadorPar(partida->manos, partida->mano);
+        ganador = ganadorParConJugadores(
+            partida->manos, partida->numeroJugadores, partida->mano);
         break;
     case JUEGO:
-        if (parejaTieneJuego(partida->manos, 0) != 1 ||
-            parejaTieneJuego(partida->manos, 1) != 1)
+        if (equipoTieneJuego(partida->manos, partida->numeroJugadores, 0) !=
+                1 ||
+            equipoTieneJuego(partida->manos, partida->numeroJugadores, 1) !=
+                1)
             return -1;
-        ganador = ganadorJuego(partida->manos, partida->mano);
+        ganador = ganadorJuegoConJugadores(
+            partida->manos, partida->numeroJugadores, partida->mano);
         break;
     case PUNTO:
-        if (parejaTieneJuego(partida->manos, 0) != 0 ||
-            parejaTieneJuego(partida->manos, 1) != 0)
+        if (equipoTieneJuego(partida->manos, partida->numeroJugadores, 0) !=
+                0 ||
+            equipoTieneJuego(partida->manos, partida->numeroJugadores, 1) !=
+                0)
             return -1;
-        ganador = ganadorPunto(partida->manos, partida->mano);
+        ganador = ganadorPuntoConJugadores(
+            partida->manos, partida->numeroJugadores, partida->mano);
         break;
     }
 
@@ -560,39 +647,27 @@ int aplicarAccionEnviteMus(EnviteMus *envite, int pareja,
     }
 }
 
-int iniciarPartidaMus(PartidaMus *partida) {
-    if (partida == NULL)
+int iniciarPartidaMusConJugadores(PartidaMus *partida, int numeroJugadores) {
+    if (partida == NULL || !numeroJugadoresValido(numeroJugadores))
         return 1;
-    Baraja baraja = {0};
-    if (crearBarajaEspanola40(&baraja))
+    *partida = (PartidaMus){.numeroJugadores = numeroJugadores};
+    if (crearBarajaEspanola40(&partida->baraja))
         return 1;
-    partida->baraja = baraja;
-    Baraja descartes = {0};
-    if (crearBarajaEspanola40(&descartes))
+    if (crearBarajaEspanola40(&partida->descartes)) {
+        destruirBaraja(&partida->baraja);
         return 1;
-    partida->descartes = descartes;
-    Mano mano1 = {0};
-    if (crearMano(&mano1, TAMANO_MANO_MUS))
-        return 1;
-    partida->manos[0] = mano1;
-    Mano mano2 = {0};
-    if (crearMano(&mano2, TAMANO_MANO_MUS))
-        return 1;
-    partida->manos[1] = mano2;
-    Mano mano3 = {0};
-    if (crearMano(&mano3, TAMANO_MANO_MUS))
-        return 1;
-    partida->manos[2] = mano3;
-    Mano mano4 = {0};
-    if (crearMano(&mano4, TAMANO_MANO_MUS))
-        return 1;
-    partida->manos[3] = mano4;
-    partida->tantos[0] = 0;
-    partida->tantos[1] = 0;
-    partida->mano = 0;
-    if (reiniciarEnvitesRonda(&partida->envites_actuales))
-        return 1;
+    }
+    for (int jugador = 0; jugador < numeroJugadores; jugador++) {
+        if (crearManoMus(&partida->manos[jugador])) {
+            destruirPartidaMus(partida);
+            return 1;
+        }
+    }
     return 0;
+}
+
+int iniciarPartidaMus(PartidaMus *partida) {
+    return iniciarPartidaMusConJugadores(partida, MUS_CUATRO_JUGADORES);
 }
 
 int destruirPartidaMus(PartidaMus *partida) {
@@ -607,6 +682,7 @@ int destruirPartidaMus(PartidaMus *partida) {
             return 1;
     partida->tantos[0] = 0;
     partida->tantos[1] = 0;
+    partida->numeroJugadores = 0;
     partida->mano = 0;
     reiniciarEnvitesRonda(&partida->envites_actuales);
     return 0;
@@ -646,9 +722,9 @@ int repartirMano(PartidaMus *partida, Mano *mano) {
 }
 
 int repartirManos(PartidaMus *partida) {
-    if (partida == NULL)
+    if (partida == NULL || !numeroJugadoresValido(partida->numeroJugadores))
         return 1;
-    for (size_t i = 0; i < NUMERO_JUGADORES_MUS; i++)
+    for (int i = 0; i < partida->numeroJugadores; i++)
         if (repartirMano(partida, &(partida->manos[i])))
             return 1;
     return 0;
@@ -679,9 +755,13 @@ int manoSeDescarta(PartidaMus *partida, Mano *mano,
 }
 
 int todosDanMus(const int decisiones[NUMERO_JUGADORES_MUS]) {
-    if (decisiones == NULL)
+    return todosDanMusConJugadores(decisiones, MUS_CUATRO_JUGADORES);
+}
+
+int todosDanMusConJugadores(const int decisiones[], int numeroJugadores) {
+    if (decisiones == NULL || !numeroJugadoresValido(numeroJugadores))
         return -1;
-    for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++) {
+    for (int jugador = 0; jugador < numeroJugadores; jugador++) {
         if (decisiones[jugador] != 0 && decisiones[jugador] != 1)
             return -1;
         if (decisiones[jugador] == 0)
@@ -694,16 +774,17 @@ int descartarManosMus(
     PartidaMus *partida,
     int descartadas[NUMERO_JUGADORES_MUS][TAMANO_MANO_MUS]) {
     if (partida == NULL || descartadas == NULL || partida->mano < 0 ||
-        partida->mano >= NUMERO_JUGADORES_MUS)
+        !numeroJugadoresValido(partida->numeroJugadores) ||
+        partida->mano >= partida->numeroJugadores)
         return 1;
-    for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++)
+    for (int jugador = 0; jugador < partida->numeroJugadores; jugador++)
         for (int carta = 0; carta < TAMANO_MANO_MUS; carta++)
             if (descartadas[jugador][carta] != 0 &&
                 descartadas[jugador][carta] != 1)
                 return 1;
 
-    for (int turno = 0; turno < NUMERO_JUGADORES_MUS; turno++) {
-        int jugador = (partida->mano + turno) % NUMERO_JUGADORES_MUS;
+    for (int turno = 0; turno < partida->numeroJugadores; turno++) {
+        int jugador = (partida->mano + turno) % partida->numeroJugadores;
         if (manoSeDescarta(partida, &partida->manos[jugador],
                            descartadas[jugador]))
             return 1;
@@ -712,8 +793,9 @@ int descartarManosMus(
 }
 
 int puntuarRonda(PartidaMus *partida, int ganador, int tantos) {
-    if (partida == NULL || ganador < 0 || ganador >= NUMERO_JUGADORES_MUS ||
-        tantos < 0 || partida->tantos[0] < 0 || partida->tantos[0] > 40 ||
+    if (partida == NULL || !numeroJugadoresValido(partida->numeroJugadores) ||
+        ganador < 0 || ganador >= partida->numeroJugadores || tantos < 0 ||
+        partida->tantos[0] < 0 || partida->tantos[0] > 40 ||
         partida->tantos[1] < 0 || partida->tantos[1] > 40)
         return -1;
     if (partida->tantos[0] == 40)

@@ -54,7 +54,7 @@ int jugarLanceEnvite(
 
 /** Juega una ronda con la estrategia pasiva: corta mus y pasa los envites.
  *  Reparte, tantea los lances aplicables y pasa la mano al siguiente jugador.
- *  @return 0 si la partida sigue, 1 o 2 si esa pareja llega a 40, -1 si
+ *  @return 0 si la partida sigue, 1 o 2 si ese equipo llega a 40, -1 si
  *  error. */
 int simularRondaMus(PartidaMus *partida);
 
@@ -66,9 +66,28 @@ int simularRondaMusConEstrategias(
 /** Simula una partida completa a 40 tantos, logueando el progreso. */
 int simularPartidaMus();
 
-/** Simula una partida completa usando las cuatro estrategias indicadas. */
+/** Simula una partida tradicional usando las cuatro estrategias indicadas. */
 int simularPartidaMusConEstrategias(
     const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS]);
+
+/** Simula una partida pasiva completa para dos o cuatro jugadores. */
+int simularPartidaMusConJugadores(int numeroJugadores);
+
+/** Simula una partida completa para dos o cuatro jugadores usando una
+ *  estrategia por cada jugador activo. */
+int simularPartidaMusConEstrategiasYJugadores(
+    const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS],
+    int numeroJugadores);
+
+/** Probabilidad exacta de que el jugador 0 gane a un único rival, fijada su
+ *  mano y enumerando todas las manos físicas posibles del jugador 1.
+ *  @param mano Mano física fija del jugador 0.
+ *  @param manoPartida Jugador que es mano (0 o 1).
+ *  @param ronda Lance a evaluar.
+ *  @param condicionRival Restricción opcional de la mano rival.
+ *  @return Probabilidad en [0, 1], o -1.0 si la entrada no es válida. */
+double probabilidadesVictoria1Fija(Mano mano, int manoPartida, Ronda ronda,
+                                   Condicion condicionRival);
 
 /** Probabilidad exacta de que la pareja de los jugadores 0 y 2 gane el
  *  lance, fijadas sus manos y enumerando todos los repartos rivales.

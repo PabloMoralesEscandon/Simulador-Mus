@@ -45,19 +45,23 @@ int logCarta(NivelLog nivel, Carta carta);
 /** Escribe las cartas de una mano separadas por comas. */
 int logMano(NivelLog nivel, Mano mano);
 
-/** Escribe las cuatro manos de la partida señalando quién es mano. */
+/** Escribe las manos activas de la partida señalando quién es mano. */
 int logManos(NivelLog nivel, const PartidaMus *partida);
 
 /** Escribe la cabecera de una ronda (numeradas desde 1). */
 int logNumeroRonda(NivelLog nivel, int ronda);
 
-/** Escribe el jugador y la pareja que ganan un lance. */
+/** Escribe el jugador y la pareja que ganan un lance tradicional. */
 int logGanadorLance(NivelLog nivel, const char *lance, int ganador);
 
-/** Escribe el marcador de tantos de las dos parejas. */
+/** Escribe el ganador con la terminología adecuada a la modalidad. */
+int logGanadorLancePartida(NivelLog nivel, const char *lance,
+                           const PartidaMus *partida, int ganador);
+
+/** Escribe el marcador de los dos jugadores o de las dos parejas. */
 int logTantos(NivelLog nivel, const PartidaMus *partida);
 
-/** Escribe la pareja ganadora; falla si nadie ha llegado a 40 tantos. */
+/** Escribe el jugador o pareja ganador; falla si nadie llega a 40 tantos. */
 int logGanadorPartida(NivelLog nivel, const PartidaMus *partida);
 
 #endif

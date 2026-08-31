@@ -26,6 +26,12 @@ static int nivelInvalido(NivelLog nivel) {
 /** Verdadero si el nivel configurado no alcanza al del mensaje. */
 static int filtrado(NivelLog nivel) { return nivel > nivel_log; }
 
+static int numeroJugadoresValido(const PartidaMus *partida) {
+    return partida != NULL &&
+           (partida->numeroJugadores == MUS_DOS_JUGADORES ||
+            partida->numeroJugadores == MUS_CUATRO_JUGADORES);
+}
+
 /** Nombre en texto de un NumeroEspanol, NULL si no existe. */
 static const char *nombreNumero(int numero) {
     switch (numero) {
@@ -110,9 +116,9 @@ int logMano(NivelLog nivel, Mano mano) {
 }
 
 int logManos(NivelLog nivel, const PartidaMus *partida) {
-    if (nivelInvalido(nivel) || partida == NULL)
+    if (nivelInvalido(nivel) || !numeroJugadoresValido(partida))
         return 1;
-    for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++) {
+    for (int jugador = 0; jugador < partida->numeroJugadores; jugador++) {
         if (logMus(nivel, "Jugador %d%s: ", jugador,
                    jugador == partida->mano ? " (mano)" : ""))
             return 1;
@@ -137,9 +143,22 @@ int logGanadorLance(NivelLog nivel, const char *lance, int ganador) {
                   ganador, ganador % 2);
 }
 
-int logTantos(NivelLog nivel, const PartidaMus *partida) {
-    if (partida == NULL)
+int logGanadorLancePartida(NivelLog nivel, const char *lance,
+                           const PartidaMus *partida, int ganador) {
+    if (lance == NULL || !numeroJugadoresValido(partida) || ganador < 0 ||
+        ganador >= partida->numeroJugadores)
         return 1;
+    if (partida->numeroJugadores == MUS_DOS_JUGADORES)
+        return logMus(nivel, "%s: gana el jugador %d\n", lance, ganador);
+    return logGanadorLance(nivel, lance, ganador);
+}
+
+int logTantos(NivelLog nivel, const PartidaMus *partida) {
+    if (!numeroJugadoresValido(partida))
+        return 1;
+    if (partida->numeroJugadores == MUS_DOS_JUGADORES)
+        return logMus(nivel, "Tantos: jugador 0 %d - %d jugador 1\n",
+                      partida->tantos[0], partida->tantos[1]);
     return logMus(nivel,
                   "Tantos: pareja 0 (jugadores 0 y 2) %d - %d pareja 1 "
                   "(jugadores 1 y 3)\n",
@@ -147,7 +166,7 @@ int logTantos(NivelLog nivel, const PartidaMus *partida) {
 }
 
 int logGanadorPartida(NivelLog nivel, const PartidaMus *partida) {
-    if (partida == NULL)
+    if (!numeroJugadoresValido(partida))
         return 1;
     int pareja;
     if (partida->tantos[0] >= 40)
@@ -156,6 +175,9 @@ int logGanadorPartida(NivelLog nivel, const PartidaMus *partida) {
         pareja = 1;
     else
         return 1;
+    if (partida->numeroJugadores == MUS_DOS_JUGADORES)
+        return logMus(nivel, "\nGana el jugador %d por %d a %d\n", pareja,
+                      partida->tantos[pareja], partida->tantos[1 - pareja]);
     return logMus(nivel, "\nGana la pareja %d (jugadores %d y %d) por %d a %d\n",
                   pareja, pareja, pareja + 2, partida->tantos[pareja],
                   partida->tantos[1 - pareja]);

@@ -32,17 +32,20 @@ int manoCumpleCondicion(Mano mano, Condicion condicion) {
 int jugarFaseMus(PartidaMus *partida,
                  const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS]) {
     if (partida == NULL || estrategias == NULL || partida->mano < 0 ||
-        partida->mano >= NUMERO_JUGADORES_MUS)
+        (partida->numeroJugadores != MUS_DOS_JUGADORES &&
+         partida->numeroJugadores != MUS_CUATRO_JUGADORES) ||
+        partida->mano >= partida->numeroJugadores)
         return 1;
-    for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++)
+    for (int jugador = 0; jugador < partida->numeroJugadores; jugador++)
         if (estrategias[jugador].decidirMus == NULL ||
             estrategias[jugador].elegirDescartes == NULL)
             return 1;
 
     for (;;) {
         int decisiones[NUMERO_JUGADORES_MUS] = {0};
-        for (int turno = 0; turno < NUMERO_JUGADORES_MUS; turno++) {
-            int jugador = (partida->mano + turno) % NUMERO_JUGADORES_MUS;
+        for (int turno = 0; turno < partida->numeroJugadores; turno++) {
+            int jugador =
+                (partida->mano + turno) % partida->numeroJugadores;
             decisiones[jugador] = estrategias[jugador].decidirMus(
                 &partida->manos[jugador], jugador, partida->mano,
                 partida->tantos, estrategias[jugador].contexto);
@@ -51,12 +54,13 @@ int jugarFaseMus(PartidaMus *partida,
             if (decisiones[jugador] != 1)
                 return 1;
         }
-        if (todosDanMus(decisiones) != 1)
+        if (todosDanMusConJugadores(decisiones, partida->numeroJugadores) != 1)
             return 1;
 
         int descartadas[NUMERO_JUGADORES_MUS][TAMANO_MANO_MUS] = {{0}};
-        for (int turno = 0; turno < NUMERO_JUGADORES_MUS; turno++) {
-            int jugador = (partida->mano + turno) % NUMERO_JUGADORES_MUS;
+        for (int turno = 0; turno < partida->numeroJugadores; turno++) {
+            int jugador =
+                (partida->mano + turno) % partida->numeroJugadores;
             if (estrategias[jugador].elegirDescartes(
                     &partida->manos[jugador], jugador, descartadas[jugador],
                     estrategias[jugador].contexto))
@@ -90,24 +94,33 @@ int jugarLanceEnvite(
     const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS],
     EnviteMus *resultado) {
     if (partida == NULL || estrategias == NULL || resultado == NULL ||
-        partida->mano < 0 || partida->mano >= NUMERO_JUGADORES_MUS ||
+        partida->mano < 0 ||
+        (partida->numeroJugadores != MUS_DOS_JUGADORES &&
+         partida->numeroJugadores != MUS_CUATRO_JUGADORES) ||
+        partida->mano >= partida->numeroJugadores ||
         ronda < GRANDE || ronda > PUNTO)
         return -1;
-    for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++)
+    for (int jugador = 0; jugador < partida->numeroJugadores; jugador++)
         if (estrategias[jugador].decidirEnvite == NULL)
             return -1;
 
     int pareja0 = 1;
     int pareja1 = 1;
     if (ronda == PARES) {
-        pareja0 = parejaTienePares(partida->manos, 0);
-        pareja1 = parejaTienePares(partida->manos, 1);
+        pareja0 =
+            equipoTienePares(partida->manos, partida->numeroJugadores, 0);
+        pareja1 =
+            equipoTienePares(partida->manos, partida->numeroJugadores, 1);
     } else if (ronda == JUEGO) {
-        pareja0 = parejaTieneJuego(partida->manos, 0);
-        pareja1 = parejaTieneJuego(partida->manos, 1);
+        pareja0 =
+            equipoTieneJuego(partida->manos, partida->numeroJugadores, 0);
+        pareja1 =
+            equipoTieneJuego(partida->manos, partida->numeroJugadores, 1);
     } else if (ronda == PUNTO &&
-               (parejaTieneJuego(partida->manos, 0) ||
-                parejaTieneJuego(partida->manos, 1))) {
+               (equipoTieneJuego(partida->manos, partida->numeroJugadores,
+                                  0) ||
+                equipoTieneJuego(partida->manos, partida->numeroJugadores,
+                                  1))) {
         return -1;
     }
 
@@ -117,7 +130,7 @@ int jugarLanceEnvite(
         return registrarEnviteMus(partida, ronda, resultado);
 
     int elegibles = 0;
-    for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++)
+    for (int jugador = 0; jugador < partida->numeroJugadores; jugador++)
         elegibles += puedeApostarLance(partida, jugador, ronda);
 
     int jugador = partida->mano;
@@ -126,7 +139,7 @@ int jugarLanceEnvite(
         if (!puedeApostarLance(partida, jugador, ronda) ||
             (resultado->estado != ENVITE_AL_PASO &&
              jugador % 2 == resultado->parejaApostadora)) {
-            jugador = (jugador + 1) % NUMERO_JUGADORES_MUS;
+            jugador = (jugador + 1) % partida->numeroJugadores;
             continue;
         }
 
@@ -151,7 +164,7 @@ int jugarLanceEnvite(
                 resultado->estado == ORDAGO_RECHAZADO)
                 return registrarEnviteMus(partida, ronda, resultado);
         }
-        jugador = (jugador + 1) % NUMERO_JUGADORES_MUS;
+        jugador = (jugador + 1) % partida->numeroJugadores;
     }
 }
 
@@ -173,10 +186,14 @@ int simularRondaMusConEstrategias(
         return resultado;
     if (envite.estado == ENVITE_RECHAZADO ||
         envite.estado == ORDAGO_RECHAZADO) {
-        logGanadorLance(LOG_LANCES, "Grande", envite.parejaApostadora);
+        logGanadorLancePartida(LOG_LANCES, "Grande", partida,
+                               envite.parejaApostadora);
     } else {
-        logGanadorLance(LOG_LANCES, "Grande",
-                        ganadorGrande(partida->manos, partida->mano));
+        logGanadorLancePartida(
+            LOG_LANCES, "Grande", partida,
+            ganadorGrandeConJugadores(partida->manos,
+                                       partida->numeroJugadores,
+                                       partida->mano));
         resultado = puntuarGrande(partida);
         if (resultado)
             return resultado;
@@ -187,10 +204,14 @@ int simularRondaMusConEstrategias(
         return resultado;
     if (envite.estado == ENVITE_RECHAZADO ||
         envite.estado == ORDAGO_RECHAZADO) {
-        logGanadorLance(LOG_LANCES, "Chica", envite.parejaApostadora);
+        logGanadorLancePartida(LOG_LANCES, "Chica", partida,
+                               envite.parejaApostadora);
     } else {
-        logGanadorLance(LOG_LANCES, "Chica",
-                        ganadorChica(partida->manos, partida->mano));
+        logGanadorLancePartida(
+            LOG_LANCES, "Chica", partida,
+            ganadorChicaConJugadores(partida->manos,
+                                      partida->numeroJugadores,
+                                      partida->mano));
         resultado = puntuarChica(partida);
         if (resultado)
             return resultado;
@@ -201,20 +222,26 @@ int simularRondaMusConEstrategias(
         return resultado;
     if (envite.estado == ENVITE_RECHAZADO ||
         envite.estado == ORDAGO_RECHAZADO) {
-        logGanadorLance(LOG_LANCES, "Pares", envite.parejaApostadora);
+        logGanadorLancePartida(LOG_LANCES, "Pares", partida,
+                               envite.parejaApostadora);
         resultado = puntuarParesDePareja(partida, envite.parejaApostadora, 0);
     } else {
-        if (parejaTienePares(partida->manos, 0) ||
-            parejaTienePares(partida->manos, 1))
-            logGanadorLance(LOG_LANCES, "Pares",
-                            ganadorPar(partida->manos, partida->mano));
+        if (equipoTienePares(partida->manos, partida->numeroJugadores, 0) ||
+            equipoTienePares(partida->manos, partida->numeroJugadores, 1))
+            logGanadorLancePartida(
+                LOG_LANCES, "Pares", partida,
+                ganadorParConJugadores(partida->manos,
+                                        partida->numeroJugadores,
+                                        partida->mano));
         resultado = puntuarPares(partida);
     }
     if (resultado)
         return resultado;
 
-    Ronda ultimaRonda = parejaTieneJuego(partida->manos, 0) ||
-                                parejaTieneJuego(partida->manos, 1)
+    Ronda ultimaRonda = equipoTieneJuego(partida->manos,
+                                         partida->numeroJugadores, 0) ||
+                                equipoTieneJuego(partida->manos,
+                                                 partida->numeroJugadores, 1)
                             ? JUEGO
                             : PUNTO;
     resultado = jugarLanceEnvite(partida, ultimaRonda, estrategias, &envite);
@@ -222,25 +249,31 @@ int simularRondaMusConEstrategias(
         return resultado;
     if (envite.estado == ENVITE_RECHAZADO ||
         envite.estado == ORDAGO_RECHAZADO) {
-        logGanadorLance(LOG_LANCES,
-                        ultimaRonda == JUEGO ? "Juego" : "Punto",
-                        envite.parejaApostadora);
+        logGanadorLancePartida(LOG_LANCES,
+                               ultimaRonda == JUEGO ? "Juego" : "Punto",
+                               partida, envite.parejaApostadora);
         resultado = puntuarJuegoOPuntoDePareja(
             partida, ultimaRonda, envite.parejaApostadora, 0);
     } else {
         if (ultimaRonda == JUEGO)
-            logGanadorLance(LOG_LANCES, "Juego",
-                            ganadorJuego(partida->manos, partida->mano));
+            logGanadorLancePartida(
+                LOG_LANCES, "Juego", partida,
+                ganadorJuegoConJugadores(partida->manos,
+                                          partida->numeroJugadores,
+                                          partida->mano));
         else
-            logGanadorLance(LOG_LANCES, "Punto",
-                            ganadorPunto(partida->manos, partida->mano));
+            logGanadorLancePartida(
+                LOG_LANCES, "Punto", partida,
+                ganadorPuntoConJugadores(partida->manos,
+                                          partida->numeroJugadores,
+                                          partida->mano));
         resultado = puntuarJuegoOPunto(partida);
     }
     if (resultado)
         return resultado;
 
     logTantos(LOG_RONDAS, partida);
-    partida->mano = (partida->mano + 1) % NUMERO_JUGADORES_MUS;
+    partida->mano = (partida->mano + 1) % partida->numeroJugadores;
     return 0;
 }
 
@@ -286,12 +319,15 @@ int simularRondaMus(PartidaMus *partida) {
     return simularRondaMusConEstrategias(partida, estrategias);
 }
 
-int simularPartidaMusConEstrategias(
-    const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS]) {
-    if (estrategias == NULL)
+int simularPartidaMusConEstrategiasYJugadores(
+    const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS],
+    int numeroJugadores) {
+    if (estrategias == NULL ||
+        (numeroJugadores != MUS_DOS_JUGADORES &&
+         numeroJugadores != MUS_CUATRO_JUGADORES))
         return 1;
     PartidaMus partida = {0};
-    if (iniciarPartidaMus(&partida))
+    if (iniciarPartidaMusConJugadores(&partida, numeroJugadores))
         return 1;
     int ronda = 0;
     int ganador = 0;
@@ -314,14 +350,28 @@ int simularPartidaMusConEstrategias(
     return resultado;
 }
 
-int simularPartidaMus() {
+int simularPartidaMusConEstrategias(
+    const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS]) {
+    return simularPartidaMusConEstrategiasYJugadores(
+        estrategias, MUS_CUATRO_JUGADORES);
+}
+
+int simularPartidaMusConJugadores(int numeroJugadores) {
+    if (numeroJugadores != MUS_DOS_JUGADORES &&
+        numeroJugadores != MUS_CUATRO_JUGADORES)
+        return 1;
     EstrategiaMus estrategias[NUMERO_JUGADORES_MUS] = {{0}};
-    for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++) {
+    for (int jugador = 0; jugador < numeroJugadores; jugador++) {
         estrategias[jugador].decidirMus = cortarMus;
         estrategias[jugador].elegirDescartes = sinDescartes;
         estrategias[jugador].decidirEnvite = pasarEnvite;
     }
-    return simularPartidaMusConEstrategias(estrategias);
+    return simularPartidaMusConEstrategiasYJugadores(estrategias,
+                                                      numeroJugadores);
+}
+
+int simularPartidaMus() {
+    return simularPartidaMusConJugadores(MUS_CUATRO_JUGADORES);
 }
 
 /** Rellena mano con las cartas representativas de esas clases de valor. */
@@ -385,11 +435,11 @@ static int numeroValidoMus(int numero) {
     }
 }
 
-static int manosFijasValidas(Mano manos[NUMERO_JUGADORES_MUS - 2]) {
-    if (manos == NULL)
+static int manosFijasValidas(Mano manos[], int numeroManos) {
+    if (manos == NULL || numeroManos < 1 || numeroManos > 2)
         return 0;
     int vistas[BASTOS + 1][REY + 1] = {{0}};
-    for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS - 2; jugador++) {
+    for (int jugador = 0; jugador < numeroManos; jugador++) {
         if (manos[jugador].cartas == NULL ||
             manos[jugador].tamano != TAMANO_MANO_MUS)
             return 0;
@@ -433,11 +483,107 @@ static int ganaParejaFija(Mano manos[NUMERO_JUGADORES_MUS], int mano,
     return ganador == 0 || ganador == 2;
 }
 
+/** Peso físico de una composición de cuatro cartas. */
+static uint64_t pesoUnaMano(
+    const ConteoMus *disponibles,
+    const int valores[TAMANO_MANO_MUS]) {
+    int usadas[CERDO + 1] = {0};
+    for (size_t i = 0; i < TAMANO_MANO_MUS; i++)
+        usadas[valores[i]] += 1;
+    uint64_t peso = 1;
+    for (int valor = PITO; valor <= CERDO; valor++)
+        peso *= combinaciones(disponibles->c[valor], usadas[valor]);
+    return peso;
+}
+
+static int ganaJugadorFijo(Mano manos[2], int mano, Ronda ronda) {
+    int ganador = -1;
+    switch (ronda) {
+    case GRANDE:
+        ganador = ganadorGrandeConJugadores(manos, 2, mano);
+        break;
+    case CHICA:
+        ganador = ganadorChicaConJugadores(manos, 2, mano);
+        break;
+    case PARES:
+        if (!equipoTienePares(manos, 2, 0) &&
+            !equipoTienePares(manos, 2, 1))
+            return 0;
+        ganador = ganadorParConJugadores(manos, 2, mano);
+        break;
+    case JUEGO:
+        if (!equipoTieneJuego(manos, 2, 0) &&
+            !equipoTieneJuego(manos, 2, 1))
+            return 0;
+        ganador = ganadorJuegoConJugadores(manos, 2, mano);
+        break;
+    case PUNTO:
+        if (equipoTieneJuego(manos, 2, 0) ||
+            equipoTieneJuego(manos, 2, 1))
+            return 0;
+        ganador = ganadorPuntoConJugadores(manos, 2, mano);
+        break;
+    }
+    return ganador == 0;
+}
+
+double probabilidadesVictoria1Fija(Mano mano, int manoPartida, Ronda ronda,
+                                   Condicion condicionRival) {
+    if (!manosFijasValidas(&mano, 1) || manoPartida < 0 || manoPartida >= 2 ||
+        ronda < GRANDE || ronda > PUNTO || condicionRival < NADA ||
+        condicionRival > PAR_Y_JUEGO)
+        return -1.0;
+
+    ConteoMus conteo = BARAJA_MUS_COMPLETA;
+    for (size_t i = 0; i < mano.tamano; i++)
+        conteo.c[valorMus(mano.cartas[i])] -= 1;
+
+    Carta cartasRival[TAMANO_MANO_MUS];
+    Mano rival = {.cartas = cartasRival, .tamano = TAMANO_MANO_MUS};
+    uint64_t casos = 0;
+    uint64_t exitos = 0;
+    for (int carta1 = PITO; carta1 <= CERDO; carta1++) {
+        ConteoMus temp = conteo;
+        if (temp.c[carta1] == 0)
+            continue;
+        temp.c[carta1]--;
+        for (int carta2 = carta1; carta2 <= CERDO; carta2++) {
+            if (temp.c[carta2] == 0)
+                continue;
+            temp.c[carta2]--;
+            for (int carta3 = carta2; carta3 <= CERDO; carta3++) {
+                if (temp.c[carta3] == 0)
+                    continue;
+                temp.c[carta3]--;
+                for (int carta4 = carta3; carta4 <= CERDO; carta4++) {
+                    if (temp.c[carta4] == 0)
+                        continue;
+                    int valores[TAMANO_MANO_MUS] = {carta1, carta2, carta3,
+                                                   carta4};
+                    construirMano(&rival, valores);
+                    if (manoCumpleCondicion(rival, condicionRival) == 1) {
+                        uint64_t peso = pesoUnaMano(&conteo, valores);
+                        Mano manosPrueba[2] = {mano, rival};
+                        if (ganaJugadorFijo(manosPrueba, manoPartida, ronda))
+                            exitos += peso;
+                        casos += peso;
+                    }
+                }
+                temp.c[carta3]++;
+            }
+            temp.c[carta2]++;
+        }
+    }
+    if (casos == 0)
+        return 0.0;
+    return (double)exitos / (double)casos;
+}
+
 double probabilidadesVictoria2Fija(Mano manos[NUMERO_JUGADORES_MUS - 2],
                                    int mano, Ronda ronda,
                                    Condicion condicionMano1,
                                    Condicion condicionMano2) {
-    if (!manosFijasValidas(manos) || mano < 0 ||
+    if (!manosFijasValidas(manos, 2) || mano < 0 ||
         mano >= NUMERO_JUGADORES_MUS || ronda < GRANDE || ronda > PUNTO ||
         condicionMano1 < NADA || condicionMano1 > PAR_Y_JUEGO ||
         condicionMano2 < NADA || condicionMano2 > PAR_Y_JUEGO)
