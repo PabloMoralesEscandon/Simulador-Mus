@@ -220,6 +220,26 @@ static void testPuntuarGrande(void) {
     destruirPartidaMus(&partida);
 }
 
+static void testPuntuarChica(void) {
+    VERIFICAR(puntuarChica(NULL) == -1);
+
+    PartidaMus partida;
+    iniciarPartidaMus(&partida);
+    for (int i = 0; i < NUMERO_JUGADORES_MUS; i++)
+        destruirMano(&partida.manos[i]);
+    partida.manos[0] = manoDe(REY, REY, AS, AS);
+    partida.manos[1] = manoDe(DOS, DOS, CUATRO, CINCO);
+    partida.manos[2] = manoDe(SOTA, SOTA, SOTA, SOTA);
+    partida.manos[3] = manoDe(AS, AS, AS, CABALLO);
+    VERIFICAR(puntuarChica(&partida) == 0);
+    VERIFICAR(partida.tantos[1] == 1);
+
+    partida.envites_actuales.chica = 6;
+    VERIFICAR(puntuarChica(&partida) == 0);
+    VERIFICAR(partida.tantos[1] == 7);
+    destruirPartidaMus(&partida);
+}
+
 int main(void) {
     srand(88);
     testIniciarDestruirPartida();
@@ -229,5 +249,6 @@ int main(void) {
     testPuntuarPares();
     testPuntuarJuegoOPunto();
     testPuntuarGrande();
+    testPuntuarChica();
     return resumenPruebas("test_partida");
 }

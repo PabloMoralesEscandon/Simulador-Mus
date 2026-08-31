@@ -73,6 +73,9 @@ int claveChica(Mano mano);
 /** Ganador del lance de chica. */
 int ganadorChica(Mano manos[NUMERO_JUGADORES_MUS], int mano);
 
+/** Puntúa chica y su envite aceptado; 0, 1 o 2 si éxito, -1 si error. */
+int puntuarChica(PartidaMus *partida);
+
 /** Clave comparable de pares: 0 sin pares; codifica jugada y alturas. */
 int clavePar(Mano mano);
 

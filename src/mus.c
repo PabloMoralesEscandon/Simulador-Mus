@@ -111,6 +111,13 @@ int ganadorChica(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
     return ganador;
 }
 
+int puntuarChica(PartidaMus *partida) {
+    if (partida == NULL)
+        return -1;
+    return puntuarLanceSimple(partida, partida->envites_actuales.chica,
+                              ganadorChica);
+}
+
 int clavePar(Mano mano) {
     int c[CERDO + 1] = {0};
     int tipo = NO_PAR;
