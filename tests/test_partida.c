@@ -139,6 +139,34 @@ static void testOrdagoMus(void) {
     VERIFICAR(envite.estado == ORDAGO_RECHAZADO);
 }
 
+static void testRegistrarEnviteMus(void) {
+    VERIFICAR(registrarEnviteMus(NULL, GRANDE, NULL) == -1);
+    PartidaMus partida;
+    iniciarPartidaMus(&partida);
+    EnviteMus envite;
+    iniciarEnviteMus(&envite);
+    VERIFICAR(envidarMus(&envite, 0, 4) == 0);
+    VERIFICAR(quererEnviteMus(&envite, 1) == 0);
+    VERIFICAR(registrarEnviteMus(&partida, GRANDE, &envite) == 0);
+    VERIFICAR(partida.envites_actuales.grande == 4);
+    VERIFICAR(partida.tantos[0] == 0);
+
+    iniciarEnviteMus(&envite);
+    VERIFICAR(envidarMus(&envite, 1, 2) == 0);
+    VERIFICAR(noQuererEnviteMus(&envite, 0) == 0);
+    VERIFICAR(registrarEnviteMus(&partida, CHICA, &envite) == 0);
+    VERIFICAR(partida.envites_actuales.chica == 0);
+    VERIFICAR(partida.tantos[1] == 1);
+
+    iniciarEnviteMus(&envite);
+    VERIFICAR(envidarMus(&envite, 0, 2) == 0);
+    VERIFICAR(envidarMus(&envite, 1, 6) == 0);
+    VERIFICAR(noQuererEnviteMus(&envite, 0) == 0);
+    VERIFICAR(registrarEnviteMus(&partida, PARES, &envite) == 0);
+    VERIFICAR(partida.tantos[1] == 3);
+    destruirPartidaMus(&partida);
+}
+
 static void testRepartirManos(void) {
     VERIFICAR(repartirManos(NULL) == 1);
 
@@ -354,6 +382,7 @@ int main(void) {
     testQuererEnviteMus();
     testNoQuererEnviteMus();
     testOrdagoMus();
+    testRegistrarEnviteMus();
     testRepartirManos();
     testManoSeDescarta();
     testTodosDanMus();

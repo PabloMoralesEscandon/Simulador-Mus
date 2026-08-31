@@ -422,6 +422,51 @@ int ordagoMus(EnviteMus *envite, int pareja) {
     return 0;
 }
 
+int registrarEnviteMus(PartidaMus *partida, Ronda ronda,
+                       const EnviteMus *envite) {
+    if (partida == NULL || envite == NULL || ronda < GRANDE || ronda > PUNTO)
+        return -1;
+
+    int *cantidad = NULL;
+    switch (ronda) {
+    case GRANDE:
+        cantidad = &partida->envites_actuales.grande;
+        break;
+    case CHICA:
+        cantidad = &partida->envites_actuales.chica;
+        break;
+    case PARES:
+        cantidad = &partida->envites_actuales.pares;
+        break;
+    case JUEGO:
+        cantidad = &partida->envites_actuales.juego;
+        break;
+    case PUNTO:
+        cantidad = &partida->envites_actuales.punto;
+        break;
+    }
+    if (*cantidad != 0)
+        return -1;
+
+    if (envite->estado == ENVITE_AL_PASO)
+        return 0;
+    if (envite->estado == ENVITE_ACEPTADO) {
+        if (envite->cantidad < 2)
+            return -1;
+        *cantidad = envite->cantidad;
+        return 0;
+    }
+    if (envite->estado == ENVITE_RECHAZADO ||
+        envite->estado == ORDAGO_RECHAZADO) {
+        if (envite->parejaApostadora < 0 || envite->parejaApostadora > 1 ||
+            envite->cantidadAnterior < 1)
+            return -1;
+        return puntuarRonda(partida, envite->parejaApostadora,
+                            envite->cantidadAnterior);
+    }
+    return -1;
+}
+
 int iniciarPartidaMus(PartidaMus *partida) {
     if (partida == NULL)
         return 1;

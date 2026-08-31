@@ -90,6 +90,10 @@ int noQuererEnviteMus(EnviteMus *envite, int pareja);
 /** Abre un órdago o lo usa para responder al envite contrario. */
 int ordagoMus(EnviteMus *envite, int pareja);
 
+/** Registra un envite resuelto; devuelve 0, pareja ganadora, o -1 si error. */
+int registrarEnviteMus(PartidaMus *partida, Ronda ronda,
+                       const EnviteMus *envite);
+
 /** Reserva una mano de TAMANO_MANO_MUS cartas. */
 int crearManoMus(Mano *mano);
 
