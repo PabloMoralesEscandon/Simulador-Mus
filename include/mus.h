@@ -219,8 +219,8 @@ int descartarManosMus(
     PartidaMus *partida,
     int descartadas[NUMERO_JUGADORES_MUS][TAMANO_MANO_MUS]);
 
-/** Suma tantos a la pareja del ganador del lance. Devuelve 1 o 2 si esa
- *  pareja alcanza los 40 tantos, 0 si la partida sigue. */
+/** Suma tantos a la pareja del ganador y limita su marcador a 40.
+ *  Devuelve 1 o 2 si hay ganador, 0 si la partida sigue y -1 si hay error. */
 int puntuarRonda(PartidaMus *partida, int ganador, int tantos);
 
 /** Baraja el mazo completo y reinicia el cursor de robo. */

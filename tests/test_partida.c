@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <stdlib.h>
 
 #include "baraja_espanola.h"
@@ -366,6 +367,8 @@ static void testPuntuarParesDePareja(void) {
     VERIFICAR(partida.tantos[0] == 3);
     VERIFICAR(puntuarParesDePareja(&partida, 1, 4) == 0);
     VERIFICAR(partida.tantos[1] == 8);
+    VERIFICAR(puntuarParesDePareja(&partida, 0, INT_MAX) == 1);
+    VERIFICAR(partida.tantos[0] == 40);
     destruirPartidaMus(&partida);
 }
 
@@ -427,6 +430,30 @@ static void testPuntuarJuegoOPuntoDePareja(void) {
     }
     VERIFICAR(puntuarJuegoOPuntoDePareja(&partida, PUNTO, 0, 2) == 0);
     VERIFICAR(partida.tantos[0] == 3);
+    VERIFICAR(puntuarJuegoOPuntoDePareja(&partida, PUNTO, 1, INT_MAX) == 2);
+    VERIFICAR(partida.tantos[1] == 40);
+    destruirPartidaMus(&partida);
+}
+
+static void testPuntuarRonda(void) {
+    VERIFICAR(puntuarRonda(NULL, 0, 1) == -1);
+    PartidaMus partida;
+    iniciarPartidaMus(&partida);
+    VERIFICAR(puntuarRonda(&partida, -1, 1) == -1);
+    VERIFICAR(puntuarRonda(&partida, NUMERO_JUGADORES_MUS, 1) == -1);
+    VERIFICAR(puntuarRonda(&partida, 0, -1) == -1);
+    VERIFICAR(partida.tantos[0] == 0);
+    VERIFICAR(partida.tantos[1] == 0);
+
+    partida.tantos[0] = 39;
+    VERIFICAR(puntuarRonda(&partida, 2, INT_MAX) == 1);
+    VERIFICAR(partida.tantos[0] == 40);
+    VERIFICAR(puntuarRonda(&partida, 1, 2) == 1);
+    VERIFICAR(partida.tantos[1] == 0);
+
+    partida.tantos[0] = 0;
+    partida.tantos[1] = 41;
+    VERIFICAR(puntuarRonda(&partida, 1, 1) == -1);
     destruirPartidaMus(&partida);
 }
 
@@ -491,6 +518,7 @@ int main(void) {
     testPuntuarParesDePareja();
     testPuntuarJuegoOPunto();
     testPuntuarJuegoOPuntoDePareja();
+    testPuntuarRonda();
     testPuntuarGrande();
     testPuntuarChica();
     return resumenPruebas("test_partida");

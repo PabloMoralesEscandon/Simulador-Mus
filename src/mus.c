@@ -218,7 +218,11 @@ int puntuarParesDePareja(PartidaMus *partida, int pareja, int tantosEnvite) {
         return -1;
 
     int tantos = tantosPares(partida->manos[pareja]) +
-                 tantosPares(partida->manos[pareja + 2]) + tantosEnvite;
+                 tantosPares(partida->manos[pareja + 2]);
+    if (tantosEnvite >= 40 - tantos)
+        tantos = 40;
+    else
+        tantos += tantosEnvite;
     return puntuarRonda(partida, pareja, tantos);
 }
 
@@ -291,20 +295,24 @@ int puntuarJuegoOPuntoDePareja(PartidaMus *partida, Ronda ronda, int pareja,
                                int tantosEnvite) {
     if (partida == NULL || pareja < 0 || pareja > 1 || tantosEnvite < 0)
         return -1;
-    int tantos = tantosEnvite;
+    int tantos = 0;
     if (ronda == JUEGO) {
         if (parejaTieneJuego(partida->manos, pareja) != 1)
             return -1;
-        tantos += tantosJuego(partida->manos[pareja]) +
-                  tantosJuego(partida->manos[pareja + 2]);
+        tantos = tantosJuego(partida->manos[pareja]) +
+                 tantosJuego(partida->manos[pareja + 2]);
     } else if (ronda == PUNTO) {
         if (parejaTieneJuego(partida->manos, 0) != 0 ||
             parejaTieneJuego(partida->manos, 1) != 0)
             return -1;
-        tantos += 1;
+        tantos = 1;
     } else {
         return -1;
     }
+    if (tantosEnvite >= 40 - tantos)
+        tantos = 40;
+    else
+        tantos += tantosEnvite;
     return puntuarRonda(partida, pareja, tantos);
 }
 
@@ -704,15 +712,21 @@ int descartarManosMus(
 }
 
 int puntuarRonda(PartidaMus *partida, int ganador, int tantos) {
-    if (ganador == 0 || ganador == 2) {
-        partida->tantos[0] += tantos;
-        if (partida->tantos[0] >= 40)
-            return 1;
-    } else {
-        partida->tantos[1] += tantos;
-        if (partida->tantos[1] >= 40)
-            return 2;
+    if (partida == NULL || ganador < 0 || ganador >= NUMERO_JUGADORES_MUS ||
+        tantos < 0 || partida->tantos[0] < 0 || partida->tantos[0] > 40 ||
+        partida->tantos[1] < 0 || partida->tantos[1] > 40)
+        return -1;
+    if (partida->tantos[0] == 40)
+        return 1;
+    if (partida->tantos[1] == 40)
+        return 2;
+
+    int pareja = ganador % 2;
+    if (tantos >= 40 - partida->tantos[pareja]) {
+        partida->tantos[pareja] = 40;
+        return pareja + 1;
     }
+    partida->tantos[pareja] += tantos;
     return 0;
 }
 
