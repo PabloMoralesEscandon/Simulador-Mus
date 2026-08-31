@@ -31,6 +31,14 @@ typedef enum {
 /** Jugadas del lance de pares, de peor a mejor. */
 enum { NO_PAR, PAR, MEDIAS, DUPLEX };
 
+typedef struct {
+    size_t grande;
+    size_t chica;
+    size_t pares;
+    size_t juego;
+    size_t punto;
+} EnviteRonda;
+
 /** Estado de una partida por parejas: jugadores 0-2 contra 1-3. */
 typedef struct {
     Baraja baraja;    /**< Mazo de robo. */
@@ -38,7 +46,11 @@ typedef struct {
     Mano manos[NUMERO_JUGADORES_MUS];
     int tantos[2]; /**< Tantos acumulados por cada pareja. */
     int mano;      /**< Jugador que es mano en la ronda actual. */
+    EnviteRonda envites_actuales;
 } PartidaMus;
+
+/** Reinicia a cero los envites registrados para una ronda. */
+int reiniciarEnvitesRonda(EnviteRonda *envites);
 
 /** Reserva una mano de TAMANO_MANO_MUS cartas. */
 int crearManoMus(Mano *mano);

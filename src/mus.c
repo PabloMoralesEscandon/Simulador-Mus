@@ -227,6 +227,13 @@ int ganadorPunto(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
     return ganador;
 }
 
+int reiniciarEnvitesRonda(EnviteRonda *envites) {
+    if (envites == NULL)
+        return 1;
+    *envites = (EnviteRonda){0};
+    return 0;
+}
+
 int iniciarPartidaMus(PartidaMus *partida) {
     if (partida == NULL)
         return 1;
@@ -257,6 +264,8 @@ int iniciarPartidaMus(PartidaMus *partida) {
     partida->tantos[0] = 0;
     partida->tantos[1] = 0;
     partida->mano = 0;
+    if (reiniciarEnvitesRonda(&partida->envites_actuales))
+        return 1;
     return 0;
 }
 
@@ -273,6 +282,7 @@ int destruirPartidaMus(PartidaMus *partida) {
     partida->tantos[0] = 0;
     partida->tantos[1] = 0;
     partida->mano = 0;
+    reiniciarEnvitesRonda(&partida->envites_actuales);
     return 0;
 }
 

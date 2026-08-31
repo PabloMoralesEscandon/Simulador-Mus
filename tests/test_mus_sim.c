@@ -25,10 +25,20 @@ static void testSimularRondaMus(void) {
     PartidaMus partida = {0};
     VERIFICAR(iniciarPartidaMus(&partida) == 0);
     VERIFICAR(resetearMazo(&partida) == 0);
+    partida.envites_actuales.grande = 2;
+    partida.envites_actuales.chica = 4;
+    partida.envites_actuales.pares = 6;
+    partida.envites_actuales.juego = 8;
+    partida.envites_actuales.punto = 10;
     VERIFICAR(simularRondaMus(&partida) == 0);
     // Una ronda reparte 4 lances de 1 tanto y pasa la mano al siguiente
     VERIFICAR(partida.tantos[0] + partida.tantos[1] == 4);
     VERIFICAR(partida.mano == 1);
+    VERIFICAR(partida.envites_actuales.grande == 0);
+    VERIFICAR(partida.envites_actuales.chica == 0);
+    VERIFICAR(partida.envites_actuales.pares == 0);
+    VERIFICAR(partida.envites_actuales.juego == 0);
+    VERIFICAR(partida.envites_actuales.punto == 0);
     for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++)
         VERIFICAR(partida.manos[jugador].tamano == TAMANO_MANO_MUS);
     VERIFICAR(destruirPartidaMus(&partida) == 0);

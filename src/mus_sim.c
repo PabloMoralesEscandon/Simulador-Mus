@@ -23,6 +23,8 @@ static int puntuarLance(PartidaMus *partida, const char *lance,
 int simularRondaMus(PartidaMus *partida) {
     if (partida == NULL)
         return -1;
+    if (reiniciarEnvitesRonda(&partida->envites_actuales))
+        return -1;
     if (repartirManos(partida))
         return -1;
     logManos(LOG_LANCES, partida);

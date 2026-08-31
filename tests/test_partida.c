@@ -22,6 +22,7 @@ static int duplicadosEnManos(PartidaMus *partida) {
 }
 
 static void testIniciarDestruirPartida(void) {
+    VERIFICAR(reiniciarEnvitesRonda(NULL) == 1);
     VERIFICAR(iniciarPartidaMus(NULL) == 1);
     VERIFICAR(destruirPartidaMus(NULL) == 1);
 
@@ -39,6 +40,11 @@ static void testIniciarDestruirPartida(void) {
     VERIFICAR(partida.tantos[0] == 0);
     VERIFICAR(partida.tantos[1] == 0);
     VERIFICAR(partida.mano == 0);
+    VERIFICAR(partida.envites_actuales.grande == 0);
+    VERIFICAR(partida.envites_actuales.chica == 0);
+    VERIFICAR(partida.envites_actuales.pares == 0);
+    VERIFICAR(partida.envites_actuales.juego == 0);
+    VERIFICAR(partida.envites_actuales.punto == 0);
 
     // ASan/LSan verifica que no queda nada sin liberar
     VERIFICAR(destruirPartidaMus(&partida) == 0);
