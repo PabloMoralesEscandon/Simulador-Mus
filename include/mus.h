@@ -76,6 +76,9 @@ int clavePar(Mano mano);
 /** Tipo de pares de la mano: NO_PAR, PAR, MEDIAS o DUPLEX. */
 int tipoPares(Mano mano);
 
+/** Tantos por el valor intrínseco de los pares: 0, 1, 2 o 3. */
+int tantosPares(Mano mano);
+
 /** Ganador del lance de pares. */
 int ganadorPar(Mano manos[NUMERO_JUGADORES_MUS], int mano);
 

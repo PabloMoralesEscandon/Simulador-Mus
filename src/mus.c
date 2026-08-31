@@ -154,6 +154,19 @@ int tipoPares(Mano mano) {
     return NO_PAR;
 }
 
+int tantosPares(Mano mano) {
+    switch (tipoPares(mano)) {
+    case PAR:
+        return 1;
+    case MEDIAS:
+        return 2;
+    case DUPLEX:
+        return 3;
+    default:
+        return 0;
+    }
+}
+
 int ganadorPar(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
     int max = clavePar(manos[mano]);
     int ganador = mano;

@@ -96,6 +96,10 @@ static void testPar(void) {
     VERIFICAR(tipoPares(manos[1]) == PAR);
     VERIFICAR(tipoPares(manos[2]) == DUPLEX);
     VERIFICAR(tipoPares(manos[3]) == MEDIAS);
+    VERIFICAR(tantosPares(manos[0]) == 0);
+    VERIFICAR(tantosPares(manos[1]) == 1);
+    VERIFICAR(tantosPares(manos[2]) == 3);
+    VERIFICAR(tantosPares(manos[3]) == 2);
     liberarManos(manos);
 
     // Entre pares gana el más alto, y el tres cuenta como rey
