@@ -60,7 +60,8 @@ typedef struct {
     int parejaApostadora;
 } EnviteMus;
 
-/** Acciones que puede devolver una estrategia durante un lance. */
+/** Acciones que puede devolver una estrategia durante un lance.
+ *  ACCION_PASAR solo es válida mientras no haya un envite pendiente. */
 typedef enum {
     ACCION_PASAR,
     ACCION_ENVIDAR,
@@ -122,17 +123,19 @@ int registrarEnviteMus(PartidaMus *partida, Ronda ronda,
 int resolverOrdagoMus(PartidaMus *partida, Ronda ronda,
                       const EnviteMus *envite);
 
-/** Aplica una acción del equipo indicado a una negociación de envite. */
+/** Aplica una acción del equipo indicado a una negociación de envite.
+ *  Pasar ante un envite u órdago pendiente es un error: la estrategia debe
+ *  responder con querer, no querer, subir el envite o lanzar un órdago. */
 int aplicarAccionEnviteMus(EnviteMus *envite, int pareja,
                            AccionEnviteMus accion);
 
 /** Reserva una mano de TAMANO_MANO_MUS cartas. */
 int crearManoMus(Mano *mano);
 
-/** Clase NumeroMus a la que pertenece la carta. */
+/** Clase NumeroMus a la que pertenece la carta; -1 si el número no es válido. */
 int valorMus(Carta carta);
 
-/** Clave comparable de la mano para grande: mayor clave, mejor mano. */
+/** Clave comparable de la mano para grande; -1 si contiene una carta inválida. */
 int claveGrande(Mano mano);
 
 /** Ganador del lance de grande. */
@@ -144,7 +147,7 @@ int ganadorGrandeConJugadores(Mano manos[], int numeroJugadores, int mano);
 /** Puntúa grande y su envite aceptado; 0, 1 o 2 si éxito, -1 si error. */
 int puntuarGrande(PartidaMus *partida);
 
-/** Clave comparable para chica (las cartas bajas puntúan más). */
+/** Clave para chica (las bajas puntúan más); -1 con una carta inválida. */
 int claveChica(Mano mano);
 
 /** Ganador del lance de chica. */
@@ -156,13 +159,13 @@ int ganadorChicaConJugadores(Mano manos[], int numeroJugadores, int mano);
 /** Puntúa chica y su envite aceptado; 0, 1 o 2 si éxito, -1 si error. */
 int puntuarChica(PartidaMus *partida);
 
-/** Clave comparable de pares: 0 sin pares; codifica jugada y alturas. */
+/** Clave de pares: 0 sin pares, -1 si hay una carta inválida. */
 int clavePar(Mano mano);
 
-/** Tipo de pares de la mano: NO_PAR, PAR, MEDIAS o DUPLEX. */
+/** Tipo de pares: NO_PAR, PAR, MEDIAS o DUPLEX; -1 si la mano no es válida. */
 int tipoPares(Mano mano);
 
-/** Tantos por el valor intrínseco de los pares: 0, 1, 2 o 3. */
+/** Tantos intrínsecos de pares (0-3), o -1 si la mano no es válida. */
 int tantosPares(Mano mano);
 
 /** Ganador del lance de pares. */
@@ -184,16 +187,16 @@ int puntuarPares(PartidaMus *partida);
 /** Puntúa los pares de un equipo ganador y un envite adicional. */
 int puntuarParesDePareja(PartidaMus *partida, int pareja, int tantosEnvite);
 
-/** Puntos de la carta para el juego: pitos 1, figuras y treses 10. */
+/** Puntos para juego: pitos 1, figuras y treses 10; -1 si no es válida. */
 int valorPuntoMus(Carta carta);
 
-/** Suma de puntos de la mano para el lance de juego. */
+/** Suma de puntos para juego, o -1 si la mano contiene una carta inválida. */
 int sumaMano(Mano mano);
 
-/** Indica si la mano suma 31 o más y, por tanto, tiene juego. */
+/** Indica si la mano tiene juego (0/1), o -1 si contiene una carta inválida. */
 int tieneJuego(Mano mano);
 
-/** Tantos por el valor intrínseco del juego: 3 por 31, 2 por otro juego. */
+/** Tantos intrínsecos de juego (0, 2 o 3), o -1 si la mano no es válida. */
 int tantosJuego(Mano mano);
 
 /** Indica si algún jugador de la pareja 0 o 1 tiene juego; -1 si error. */
@@ -232,7 +235,7 @@ int iniciarPartidaMusConJugadores(PartidaMus *partida, int numeroJugadores);
 /** Libera toda la memoria de la partida. */
 int destruirPartidaMus(PartidaMus *partida);
 
-/** Sustituye el mazo agotado por la pila de descartes barajada. */
+/** Sustituye el mazo agotado por descartes barajados; falla sin mutar si no hay. */
 int barajarDescartes(PartidaMus *partida);
 
 /** Rellena una mano robando del mazo; recicla los descartes si se agota. */

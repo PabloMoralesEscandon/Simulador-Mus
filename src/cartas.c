@@ -1,6 +1,44 @@
+#include <limits.h>
+#include <stdint.h>
 #include <stdlib.h>
 
 #include "cartas.h"
+
+/** Devuelve un entero uniforme en [0, limite). */
+static size_t aleatorioAcotado(size_t limite) {
+    const uintmax_t rangoRand = (uintmax_t)RAND_MAX + 1;
+
+    if ((uintmax_t)limite <= rangoRand) {
+        const uintmax_t zonaUniforme = rangoRand - rangoRand % limite;
+        unsigned int valor;
+        do {
+            valor = (unsigned int)rand();
+        } while ((uintmax_t)valor >= zonaUniforme);
+        return (size_t)((uintmax_t)valor % limite);
+    }
+
+    // Para barajas mayores que el rango de rand(), compone los bits
+    // necesarios. Si RAND_MAX + 1 es impar, descarta su último resultado para
+    // que cada bit siga teniendo exactamente la misma probabilidad.
+    size_t mascara = limite - 1;
+    for (size_t desplazamiento = 1;
+         desplazamiento < sizeof(size_t) * CHAR_BIT;
+         desplazamiento <<= 1)
+        mascara |= mascara >> desplazamiento;
+
+    size_t valor;
+    do {
+        valor = 0;
+        for (size_t bit = mascara; bit != 0; bit >>= 1) {
+            unsigned int muestra;
+            do {
+                muestra = (unsigned int)rand();
+            } while (RAND_MAX % 2 == 0 && muestra == (unsigned int)RAND_MAX);
+            valor = (valor << 1) | (muestra & 1U);
+        }
+    } while (valor >= limite);
+    return valor;
+}
 
 int crearBaraja(Baraja *baraja, size_t tamano) {
     // Caso de puntero NULL
@@ -40,7 +78,7 @@ int barajar(Baraja *baraja) {
     // Fisher-Yates: recorre desde el final intercambiando cada posición
     // con un índice aleatorio entre 0 e i
     for (size_t i = baraja->tamano - 1; i > 0; i--) {
-        int j = rand() % (i + 1);
+        size_t j = aleatorioAcotado(i + 1);
 
         // Intercambiar array[i] con array[j]
         Carta temp = baraja->cartas[i];

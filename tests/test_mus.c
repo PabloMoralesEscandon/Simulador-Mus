@@ -26,6 +26,35 @@ static void testCrearManoMus(void) {
     destruirMano(&mano);
 }
 
+static void testCartaInvalida(void) {
+    Carta carta = {.numero = OCHO, .palo = OROS};
+    VERIFICAR(valorMus(carta) == -1);
+    VERIFICAR(valorPuntoMus(carta) == -1);
+
+    Mano manos[NUMERO_JUGADORES_MUS] = {
+        manoDe(REY, REY, AS, OCHO),
+        manoDe(CABALLO, CABALLO, AS, AS),
+        manoDe(SOTA, SOTA, CINCO, SEIS),
+        manoDe(SIETE, SIETE, CUATRO, CINCO),
+    };
+    VERIFICAR(claveGrande(manos[0]) == -1);
+    VERIFICAR(claveChica(manos[0]) == -1);
+    VERIFICAR(clavePar(manos[0]) == -1);
+    VERIFICAR(tipoPares(manos[0]) == -1);
+    VERIFICAR(tantosPares(manos[0]) == -1);
+    VERIFICAR(sumaMano(manos[0]) == -1);
+    VERIFICAR(tieneJuego(manos[0]) == -1);
+    VERIFICAR(tantosJuego(manos[0]) == -1);
+    VERIFICAR(ganadorGrande(manos, 0) == -1);
+    VERIFICAR(ganadorChica(manos, 0) == -1);
+    VERIFICAR(ganadorPar(manos, 0) == -1);
+    VERIFICAR(ganadorJuego(manos, 0) == -1);
+    VERIFICAR(ganadorPunto(manos, 0) == -1);
+    VERIFICAR(parejaTienePares(manos, 0) == -1);
+    VERIFICAR(parejaTieneJuego(manos, 0) == -1);
+    liberarManos(manos);
+}
+
 static void testGrande(void) {
     // Cuatro reyes ganan a cualquier otra mano
     Mano manos[NUMERO_JUGADORES_MUS] = {
@@ -251,6 +280,7 @@ static void testGanadorPunto(void) {
 
 int main(void) {
     testCrearManoMus();
+    testCartaInvalida();
     testGrande();
     testChica();
     testPar();

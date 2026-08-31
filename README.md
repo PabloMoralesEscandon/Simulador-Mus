@@ -99,7 +99,7 @@ Los filtros rivales disponibles son `NADA`, `TIENE_JUEGO`, `TIENE_31` y
 `PAR_Y_JUEGO`. En pares y juego, un reparto en el que ese lance no existe no
 cuenta como victoria; punto solo se disputa si nadie tiene juego. La función
 devuelve `-1.0` si las manos, la posición, el lance o los filtros no son
-válidos.
+válidos, y también si los filtros dejan vacío el espacio muestral.
 
 ## Componentes
 

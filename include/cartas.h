@@ -35,7 +35,7 @@ int crearBaraja(Baraja *baraja, size_t tamano);
 /** Libera la memoria de la baraja. */
 int destruirBaraja(Baraja *baraja);
 
-/** Baraja las cartas (Fisher-Yates) sin tocar el cursor de robo. */
+/** Baraja las cartas con Fisher-Yates uniforme sin tocar el cursor de robo. */
 int barajar(Baraja *baraja);
 
 /** Copia en out la siguiente carta y avanza el cursor; 1 si no quedan. */

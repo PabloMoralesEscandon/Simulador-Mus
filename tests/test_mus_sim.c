@@ -37,6 +37,16 @@ static int darMusUnaVez(const Mano *mano, int jugador, int manoPartida,
     return estado->decisiones++ == 0;
 }
 
+static int decisionMusInvalida(const Mano *mano, int jugador, int manoPartida,
+                               const int tantos[2], void *contexto) {
+    (void)mano;
+    (void)jugador;
+    (void)manoPartida;
+    (void)tantos;
+    (void)contexto;
+    return -1;
+}
+
 static int descartarPrimera(const Mano *mano, int jugador,
                             int descartadas[TAMANO_MANO_MUS],
                             void *contexto) {
@@ -87,6 +97,20 @@ static void testJugarLanceEnvite(void) {
     VERIFICAR(partida.envites_actuales.grande == 2);
     VERIFICAR(contextos[0].siguienteAccion == 1);
     VERIFICAR(contextos[1].siguienteAccion == 1);
+    VERIFICAR(destruirPartidaMus(&partida) == 0);
+
+    VERIFICAR(iniciarPartidaMus(&partida) == 0);
+    VERIFICAR(resetearMazo(&partida) == 0);
+    VERIFICAR(repartirManos(&partida) == 0);
+    memset(contextos, 0, sizeof(contextos));
+    contextos[0].acciones[0] =
+        (AccionEnviteMus){.tipo = ACCION_ENVIDAR, .cantidadTotal = 2};
+    contextos[0].numeroAcciones = 1;
+    // El jugador 1 usa la acción por defecto, ACCION_PASAR, que no es una
+    // respuesta válida ante el envite pendiente.
+    VERIFICAR(jugarLanceEnvite(&partida, GRANDE, estrategias, &resultado) ==
+              -1);
+    VERIFICAR(resultado.estado == ENVITE_PENDIENTE);
     VERIFICAR(destruirPartidaMus(&partida) == 0);
 }
 
@@ -201,6 +225,11 @@ static void testSimularPartidaMusConEstrategias(void) {
         estrategias[jugador].contexto = &contextos[jugador];
     }
     VERIFICAR(simularPartidaMusConEstrategias(estrategias) == 0);
+
+    // La salida por error también debe liberar todas las reservas internas.
+    for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++)
+        estrategias[jugador].decidirMus = decisionMusInvalida;
+    VERIFICAR(simularPartidaMusConEstrategias(estrategias) == 1);
 }
 
 static void testProbabilidadesCasosSeguros(void) {

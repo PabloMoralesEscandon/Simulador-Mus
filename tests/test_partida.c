@@ -218,6 +218,24 @@ static void testRepartirManos(void) {
     destruirPartidaMus(&partida);
 }
 
+static void testDescartesVaciosNoMutanMazo(void) {
+    PartidaMus partida;
+    VERIFICAR(iniciarPartidaMus(&partida) == 0);
+    partida.baraja.siguiente_carta = 7;
+
+    VERIFICAR(barajarDescartes(&partida) == 1);
+    VERIFICAR(partida.baraja.tamano == 40);
+    VERIFICAR(partida.baraja.siguiente_carta == 7);
+    VERIFICAR(partida.descartes.siguiente_carta == 0);
+
+    partida.baraja.siguiente_carta = partida.baraja.tamano;
+    VERIFICAR(repartirMano(&partida, &partida.manos[0]) == 1);
+    VERIFICAR(partida.baraja.tamano == 40);
+    VERIFICAR(partida.baraja.siguiente_carta == 40);
+    VERIFICAR(partida.descartes.siguiente_carta == 0);
+    VERIFICAR(destruirPartidaMus(&partida) == 0);
+}
+
 static void testManoSeDescarta(void) {
     PartidaMus partida;
     iniciarPartidaMus(&partida);
@@ -509,6 +527,7 @@ int main(void) {
     testResolverOrdagoMus();
     testAplicarAccionEnviteMus();
     testRepartirManos();
+    testDescartesVaciosNoMutanMazo();
     testManoSeDescarta();
     testTodosDanMus();
     testDescartarManosMus();

@@ -15,6 +15,9 @@ static const int NUMERO_ESPANOL_DESDE_MUS[CERDO + 1] = {
 int manoCumpleCondicion(Mano mano, Condicion condicion) {
     if (mano.cartas == NULL || mano.tamano != TAMANO_MANO_MUS)
         return -1;
+    for (size_t i = 0; i < mano.tamano; i++)
+        if (valorMus(mano.cartas[i]) < 0)
+            return -1;
     switch (condicion) {
     case NADA:
         return 1;
@@ -22,8 +25,13 @@ int manoCumpleCondicion(Mano mano, Condicion condicion) {
         return tieneJuego(mano);
     case TIENE_31:
         return sumaMano(mano) == 31;
-    case PAR_Y_JUEGO:
-        return tipoPares(mano) != NO_PAR && tieneJuego(mano);
+    case PAR_Y_JUEGO: {
+        int pares = tipoPares(mano);
+        int juego = tieneJuego(mano);
+        if (pares < 0 || juego < 0)
+            return -1;
+        return pares != NO_PAR && juego;
+    }
     default:
         return -1;
     }
@@ -82,8 +90,10 @@ int jugarFaseMus(PartidaMus *partida,
 
 static int puedeApostarLance(const PartidaMus *partida, int jugador,
                              Ronda ronda) {
-    if (ronda == PARES)
-        return tipoPares(partida->manos[jugador]) != NO_PAR;
+    if (ronda == PARES) {
+        int tipo = tipoPares(partida->manos[jugador]);
+        return tipo < 0 ? -1 : tipo != NO_PAR;
+    }
     if (ronda == JUEGO)
         return tieneJuego(partida->manos[jugador]);
     return 1;
@@ -123,6 +133,8 @@ int jugarLanceEnvite(
                                   1))) {
         return -1;
     }
+    if (pareja0 < 0 || pareja1 < 0)
+        return -1;
 
     if (iniciarEnviteMus(resultado))
         return -1;
@@ -130,13 +142,20 @@ int jugarLanceEnvite(
         return registrarEnviteMus(partida, ronda, resultado);
 
     int elegibles = 0;
-    for (int jugador = 0; jugador < partida->numeroJugadores; jugador++)
-        elegibles += puedeApostarLance(partida, jugador, ronda);
+    for (int jugador = 0; jugador < partida->numeroJugadores; jugador++) {
+        int elegible = puedeApostarLance(partida, jugador, ronda);
+        if (elegible < 0)
+            return -1;
+        elegibles += elegible;
+    }
 
     int jugador = partida->mano;
     int pasos = 0;
     for (;;) {
-        if (!puedeApostarLance(partida, jugador, ronda) ||
+        int elegible = puedeApostarLance(partida, jugador, ronda);
+        if (elegible < 0)
+            return -1;
+        if (!elegible ||
             (resultado->estado != ENVITE_AL_PASO &&
              jugador % 2 == resultado->parejaApostadora)) {
             jugador = (jugador + 1) % partida->numeroJugadores;
@@ -575,7 +594,7 @@ double probabilidadesVictoria1Fija(Mano mano, int manoPartida, Ronda ronda,
         }
     }
     if (casos == 0)
-        return 0.0;
+        return -1.0;
     return (double)exitos / (double)casos;
 }
 
@@ -590,9 +609,9 @@ double probabilidadesVictoria2Fija(Mano manos[NUMERO_JUGADORES_MUS - 2],
         return -1.0;
     // Retira de la baraja las cartas de las dos manos fijas
     ConteoMus conteo = BARAJA_MUS_COMPLETA;
-    for (size_t mano = 0; mano < 2; mano++)
-        for (size_t i = 0; i < manos[mano].tamano; i++)
-            conteo.c[valorMus(manos[mano].cartas[i])] -= 1;
+    for (size_t m = 0; m < 2; m++)
+        for (size_t i = 0; i < manos[m].tamano; i++)
+            conteo.c[valorMus(manos[m].cartas[i])] -= 1;
 
     Carta cartasMano2[TAMANO_MANO_MUS];
     Mano mano2 = {.cartas = cartasMano2, .tamano = TAMANO_MANO_MUS};
@@ -682,6 +701,6 @@ double probabilidadesVictoria2Fija(Mano manos[NUMERO_JUGADORES_MUS - 2],
         temp.c[carta1] += 1;
     }
     if (casos == 0)
-        return 0.0;
+        return -1.0;
     return (double)exitos / (double)casos;
 }

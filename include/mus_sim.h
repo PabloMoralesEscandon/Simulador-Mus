@@ -27,7 +27,9 @@ typedef int (*SeleccionDescartes)(const Mano *mano, int jugador,
                                   int descartadas[TAMANO_MANO_MUS],
                                   void *contexto);
 
-/** Decide la siguiente acción de un jugador en la negociación de un lance. */
+/** Decide la siguiente acción de un jugador en la negociación de un lance.
+ *  ACCION_PASAR solo es válida con ENVITE_AL_PASO. Ante un envite pendiente,
+ *  debe querer, no querer, subir o lanzar un órdago; pasar aborta con error. */
 typedef AccionEnviteMus (*DecisionEnvite)(const Mano *mano, int jugador,
                                           int manoPartida,
                                           const int tantos[2], Ronda ronda,
@@ -46,7 +48,9 @@ typedef struct {
 int jugarFaseMus(PartidaMus *partida,
                  const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS]);
 
-/** Negocia y registra el envite de un lance; devuelve 0, 1, 2 o -1. */
+/** Negocia y registra el envite de un lance; devuelve 0, 1, 2 o -1.
+ *  Una acción no válida para el estado actual, incluido pasar ante un envite
+ *  pendiente, devuelve -1. */
 int jugarLanceEnvite(
     PartidaMus *partida, Ronda ronda,
     const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS],
@@ -85,7 +89,8 @@ int simularPartidaMusConEstrategiasYJugadores(
  *  @param manoPartida Jugador que es mano (0 o 1).
  *  @param ronda Lance a evaluar.
  *  @param condicionRival Restricción opcional de la mano rival.
- *  @return Probabilidad en [0, 1], o -1.0 si la entrada no es válida. */
+ *  @return Probabilidad en [0, 1], o -1.0 si la entrada no es válida o el
+ *  filtro deja vacío el espacio muestral. */
 double probabilidadesVictoria1Fija(Mano mano, int manoPartida, Ronda ronda,
                                    Condicion condicionRival);
 
@@ -98,7 +103,8 @@ double probabilidadesVictoria1Fija(Mano mano, int manoPartida, Ronda ronda,
  *  @param ronda Lance a evaluar.
  *  @param condicionMano1 Restricción del jugador 1.
  *  @param condicionMano2 Restricción del jugador 3.
- *  @return Probabilidad en [0, 1], o -1.0 si las manos no son válidas. */
+ *  @return Probabilidad en [0, 1], o -1.0 si la entrada no es válida o los
+ *  filtros dejan vacío el espacio muestral. */
 double probabilidadesVictoria2Fija(Mano manos[NUMERO_JUGADORES_MUS - 2],
                                    int mano, Ronda ronda,
                                    Condicion condicionMano1,

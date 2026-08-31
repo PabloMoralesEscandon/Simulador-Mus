@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <stdlib.h>
 
 #include "baraja_espanola.h"
@@ -50,14 +51,17 @@ int valorMus(Carta carta) {
         return MUS_CABALLO;
 
     default:
-        return 0; // No se debería llegar aquí!!
+        return -1;
     }
 }
 
 int claveGrande(Mano mano) {
     int clave = 0;
     for (size_t i = 0; i < mano.tamano; i++) {
-        clave += PESO_GRANDE[valorMus(mano.cartas[i])];
+        int valor = valorMus(mano.cartas[i]);
+        if (valor < PITO || valor > CERDO)
+            return -1;
+        clave += PESO_GRANDE[valor];
     }
     return clave;
 }
@@ -67,10 +71,14 @@ int ganadorGrandeConJugadores(Mano manos[], int numeroJugadores, int mano) {
         mano >= numeroJugadores)
         return -1;
     int max = claveGrande(manos[mano]);
+    if (max < 0)
+        return -1;
     int ganador = mano;
     for (int i = 1; i < numeroJugadores; i++) {
         int j = (mano + i) % numeroJugadores;
         int valor = claveGrande(manos[j]);
+        if (valor < 0)
+            return -1;
         if (valor > max) {
             max = valor;
             ganador = j;
@@ -105,7 +113,10 @@ int puntuarGrande(PartidaMus *partida) {
 int claveChica(Mano mano) {
     int clave = 0;
     for (size_t i = 0; i < mano.tamano; i++) {
-        clave += PESO_CHICA[valorMus(mano.cartas[i])];
+        int valor = valorMus(mano.cartas[i]);
+        if (valor < PITO || valor > CERDO)
+            return -1;
+        clave += PESO_CHICA[valor];
     }
     return clave;
 }
@@ -115,10 +126,14 @@ int ganadorChicaConJugadores(Mano manos[], int numeroJugadores, int mano) {
         mano >= numeroJugadores)
         return -1;
     int max = claveChica(manos[mano]);
+    if (max < 0)
+        return -1;
     int ganador = mano;
     for (int i = 1; i < numeroJugadores; i++) {
         int j = (mano + i) % numeroJugadores;
         int valor = claveChica(manos[j]);
+        if (valor < 0)
+            return -1;
         if (valor > max) {
             max = valor;
             ganador = j;
@@ -143,8 +158,12 @@ int clavePar(Mano mano) {
     int tipo = NO_PAR;
     int alto = 0, bajo = 0;
     // Cuenta cuántas cartas hay de cada clase
-    for (size_t i = 0; i < mano.tamano; i++)
-        c[valorMus(mano.cartas[i])]++;
+    for (size_t i = 0; i < mano.tamano; i++) {
+        int valor = valorMus(mano.cartas[i]);
+        if (valor < PITO || valor > CERDO)
+            return -1;
+        c[valor]++;
+    }
     // Busca repeticiones de menor a mayor clase; alto/bajo guardan i + 1
     // para que un par de pitos (i == 0) no se confunda con no tener pares
     for (int i = 0; i < CERDO + 1; i++) {
@@ -190,6 +209,8 @@ int clavePar(Mano mano) {
 
 int tipoPares(Mano mano) {
     int clave = clavePar(mano);
+    if (clave < 0)
+        return -1;
     if (clave >= 100)
         return DUPLEX;
     if (clave >= 10)
@@ -200,7 +221,8 @@ int tipoPares(Mano mano) {
 }
 
 int tantosPares(Mano mano) {
-    switch (tipoPares(mano)) {
+    int tipo = tipoPares(mano);
+    switch (tipo) {
     case PAR:
         return 1;
     case MEDIAS:
@@ -208,7 +230,7 @@ int tantosPares(Mano mano) {
     case DUPLEX:
         return 3;
     default:
-        return 0;
+        return tipo == NO_PAR ? 0 : -1;
     }
 }
 
@@ -217,10 +239,14 @@ int ganadorParConJugadores(Mano manos[], int numeroJugadores, int mano) {
         mano >= numeroJugadores)
         return -1;
     int max = clavePar(manos[mano]);
+    if (max < 0)
+        return -1;
     int ganador = mano;
     for (int i = 1; i < numeroJugadores; i++) {
         int j = (mano + i) % numeroJugadores;
         int valor = clavePar(manos[j]);
+        if (valor < 0)
+            return -1;
         if (valor > max) {
             max = valor;
             ganador = j;
@@ -237,9 +263,13 @@ int equipoTienePares(Mano manos[], int numeroJugadores, int equipo) {
     if (manos == NULL || !numeroJugadoresValido(numeroJugadores) ||
         equipo < 0 || equipo > 1)
         return -1;
-    for (int jugador = equipo; jugador < numeroJugadores; jugador += 2)
-        if (tipoPares(manos[jugador]) != NO_PAR)
+    for (int jugador = equipo; jugador < numeroJugadores; jugador += 2) {
+        int tipo = tipoPares(manos[jugador]);
+        if (tipo < 0)
+            return -1;
+        if (tipo != NO_PAR)
             return 1;
+    }
     return 0;
 }
 
@@ -256,12 +286,13 @@ int puntuarParesDePareja(PartidaMus *partida, int pareja, int tantosEnvite) {
 
     int tantos = 0;
     for (int jugador = pareja; jugador < partida->numeroJugadores;
-         jugador += 2)
-        tantos += tantosPares(partida->manos[jugador]);
-    if (tantosEnvite >= 40 - tantos)
-        tantos = 40;
-    else
-        tantos += tantosEnvite;
+         jugador += 2) {
+        int tantosJugador = tantosPares(partida->manos[jugador]);
+        if (tantosJugador < 0)
+            return -1;
+        tantos += tantosJugador;
+    }
+    tantos = tantosEnvite > INT_MAX - tantos ? INT_MAX : tantos + tantosEnvite;
     return puntuarRonda(partida, pareja, tantos);
 }
 
@@ -273,6 +304,8 @@ int puntuarPares(PartidaMus *partida) {
         return -1;
     int pares0 = equipoTienePares(partida->manos, partida->numeroJugadores, 0);
     int pares1 = equipoTienePares(partida->manos, partida->numeroJugadores, 1);
+    if (pares0 < 0 || pares1 < 0)
+        return -1;
     if (!pares0 && !pares1)
         return partida->envites_actuales.pares == 0 ? 0 : -1;
     if ((!pares0 || !pares1) && partida->envites_actuales.pares != 0)
@@ -312,15 +345,23 @@ int valorPuntoMus(Carta carta) {
 int sumaMano(Mano mano) {
     int cuenta = 0;
     for (size_t i = 0; i < mano.tamano; i++) {
-        cuenta += valorPuntoMus(mano.cartas[i]);
+        int valor = valorPuntoMus(mano.cartas[i]);
+        if (valor < 0)
+            return -1;
+        cuenta += valor;
     }
     return cuenta;
 }
 
-int tieneJuego(Mano mano) { return sumaMano(mano) >= 31; }
+int tieneJuego(Mano mano) {
+    int suma = sumaMano(mano);
+    return suma < 0 ? -1 : suma >= 31;
+}
 
 int tantosJuego(Mano mano) {
     int suma = sumaMano(mano);
+    if (suma < 0)
+        return -1;
     if (suma == 31)
         return 3;
     if (suma > 31)
@@ -332,9 +373,13 @@ int equipoTieneJuego(Mano manos[], int numeroJugadores, int equipo) {
     if (manos == NULL || !numeroJugadoresValido(numeroJugadores) ||
         equipo < 0 || equipo > 1)
         return -1;
-    for (int jugador = equipo; jugador < numeroJugadores; jugador += 2)
-        if (tieneJuego(manos[jugador]))
+    for (int jugador = equipo; jugador < numeroJugadores; jugador += 2) {
+        int juego = tieneJuego(manos[jugador]);
+        if (juego < 0)
+            return -1;
+        if (juego)
             return 1;
+    }
     return 0;
 }
 
@@ -353,8 +398,12 @@ int puntuarJuegoOPuntoDePareja(PartidaMus *partida, Ronda ronda, int pareja,
                              pareja) != 1)
             return -1;
         for (int jugador = pareja; jugador < partida->numeroJugadores;
-             jugador += 2)
-            tantos += tantosJuego(partida->manos[jugador]);
+             jugador += 2) {
+            int tantosJugador = tantosJuego(partida->manos[jugador]);
+            if (tantosJugador < 0)
+                return -1;
+            tantos += tantosJugador;
+        }
     } else if (ronda == PUNTO) {
         if (equipoTieneJuego(partida->manos, partida->numeroJugadores, 0) !=
                 0 ||
@@ -365,10 +414,7 @@ int puntuarJuegoOPuntoDePareja(PartidaMus *partida, Ronda ronda, int pareja,
     } else {
         return -1;
     }
-    if (tantosEnvite >= 40 - tantos)
-        tantos = 40;
-    else
-        tantos += tantosEnvite;
+    tantos = tantosEnvite > INT_MAX - tantos ? INT_MAX : tantos + tantosEnvite;
     return puntuarRonda(partida, pareja, tantos);
 }
 
@@ -381,6 +427,8 @@ int puntuarJuegoOPunto(PartidaMus *partida) {
         return -1;
     int juego0 = equipoTieneJuego(partida->manos, partida->numeroJugadores, 0);
     int juego1 = equipoTieneJuego(partida->manos, partida->numeroJugadores, 1);
+    if (juego0 < 0 || juego1 < 0)
+        return -1;
     if (juego0 || juego1) {
         if (partida->envites_actuales.punto != 0)
             return -1;
@@ -404,6 +452,8 @@ int puntuarJuegoOPunto(PartidaMus *partida) {
 /** Posición del juego en ORDEN_PUNTO (mayor es mejor); -1 sin juego. */
 static int claveJuego(Mano mano) {
     int valor = sumaMano(mano);
+    if (valor < 0)
+        return -2;
     for (int i = 0; i < 8; i++)
         if (valor == ORDEN_PUNTO[i])
             return i;
@@ -415,10 +465,14 @@ int ganadorJuegoConJugadores(Mano manos[], int numeroJugadores, int mano) {
         mano >= numeroJugadores)
         return -1;
     int max = claveJuego(manos[mano]);
+    if (max == -2)
+        return -1;
     int ganador = mano;
     for (int i = 1; i < numeroJugadores; i++) {
         int j = (mano + i) % numeroJugadores;
         int valor = claveJuego(manos[j]);
+        if (valor == -2)
+            return -1;
         if (valor > max) {
             max = valor;
             ganador = j;
@@ -438,10 +492,14 @@ int ganadorPuntoConJugadores(Mano manos[], int numeroJugadores, int mano) {
         mano >= numeroJugadores)
         return -1;
     int max = sumaMano(manos[mano]);
+    if (max < 0)
+        return -1;
     int ganador = mano;
     for (int i = 1; i < numeroJugadores; i++) {
         int j = (mano + i) % numeroJugadores;
         int valor = sumaMano(manos[j]);
+        if (valor < 0)
+            return -1;
         if (valor > max) {
             max = valor;
             ganador = j;
@@ -623,6 +681,8 @@ int resolverOrdagoMus(PartidaMus *partida, Ronda ronda,
         break;
     }
 
+    if (ganador < 0 || ganador >= partida->numeroJugadores)
+        return -1;
     int pareja = ganador % 2;
     partida->tantos[pareja] = 40;
     reiniciarEnvitesRonda(&partida->envites_actuales);
@@ -689,7 +749,10 @@ int destruirPartidaMus(PartidaMus *partida) {
 }
 
 int barajarDescartes(PartidaMus *partida) {
-    if (partida == NULL)
+    if (partida == NULL || partida->baraja.cartas == NULL ||
+        partida->descartes.cartas == NULL ||
+        partida->descartes.siguiente_carta == 0 ||
+        partida->descartes.siguiente_carta > partida->descartes.tamano)
         return 1;
     // El mazo pasa a contener solo las cartas descartadas hasta ahora:
     // se copian al principio y tamano se encoge a ese número
@@ -703,21 +766,21 @@ int barajarDescartes(PartidaMus *partida) {
     return 0;
 }
 
+static int sacarCartaReciclandoDescartes(PartidaMus *partida, Carta *carta) {
+    if (partida == NULL || carta == NULL)
+        return 1;
+    if (partida->baraja.siguiente_carta >= partida->baraja.tamano &&
+        barajarDescartes(partida))
+        return 1;
+    return sacarCarta(&partida->baraja, carta);
+}
+
 int repartirMano(PartidaMus *partida, Mano *mano) {
-    if (partida == NULL)
+    if (partida == NULL || mano == NULL || mano->cartas == NULL)
         return 1;
-    if (mano == NULL)
-        return 1;
-    for (size_t i = 0; i < mano->tamano; i++) {
-        mano->cartas[i].numero =
-            partida->baraja.cartas[partida->baraja.siguiente_carta].numero;
-        mano->cartas[i].palo =
-            partida->baraja.cartas[partida->baraja.siguiente_carta].palo;
-        partida->baraja.siguiente_carta += 1;
-        if (partida->baraja.siguiente_carta == partida->baraja.tamano)
-            if (barajarDescartes(partida))
-                return 1;
-    }
+    for (size_t i = 0; i < mano->tamano; i++)
+        if (sacarCartaReciclandoDescartes(partida, &mano->cartas[i]))
+            return 1;
     return 0;
 }
 
@@ -732,23 +795,25 @@ int repartirManos(PartidaMus *partida) {
 
 int manoSeDescarta(PartidaMus *partida, Mano *mano,
                    int descartadas[TAMANO_MANO_MUS]) {
-    if (partida == NULL)
+    if (partida == NULL || mano == NULL || descartadas == NULL ||
+        mano->cartas == NULL || mano->tamano != TAMANO_MANO_MUS ||
+        partida->descartes.cartas == NULL)
         return 1;
-    if (mano == NULL)
-        return 1;
+    for (size_t i = 0; i < TAMANO_MANO_MUS; i++)
+        if (descartadas[i] != 0 && descartadas[i] != 1)
+            return 1;
     for (size_t i = 0; i < TAMANO_MANO_MUS; i++) {
         if (descartadas[i]) {
             // La carta descartada va a la pila y se roba una nueva;
             // si el mazo se agota, se recicla la pila de descartes
+            if (partida->descartes.siguiente_carta >=
+                partida->descartes.tamano)
+                return 1;
             partida->descartes.cartas[partida->descartes.siguiente_carta] =
                 mano->cartas[i];
             partida->descartes.siguiente_carta += 1;
-            mano->cartas[i] =
-                partida->baraja.cartas[partida->baraja.siguiente_carta];
-            partida->baraja.siguiente_carta += 1;
-            if (partida->baraja.siguiente_carta == partida->baraja.tamano)
-                if (barajarDescartes(partida))
-                    return 1;
+            if (sacarCartaReciclandoDescartes(partida, &mano->cartas[i]))
+                return 1;
         }
     }
     return 0;
