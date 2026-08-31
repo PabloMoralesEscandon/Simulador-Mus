@@ -88,6 +88,9 @@ int valorPuntoMus(Carta carta);
 /** Suma de puntos de la mano para el lance de juego. */
 int sumaMano(Mano mano);
 
+/** Indica si la mano suma 31 o más y, por tanto, tiene juego. */
+int tieneJuego(Mano mano);
+
 /** Ganador del juego (orden 31 > 32 > 40 > 37 > ... > 33); si nadie
  *  llega a 31 el lance se decide al punto. */
 int ganadorJuego(Mano manos[NUMERO_JUGADORES_MUS], int mano);

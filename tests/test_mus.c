@@ -153,6 +153,8 @@ static void testPunto(void) {
         manoDe(REY, REY, SOTA, CABALLO),   // 40
         manoDe(REY, REY, REY, SIETE),      // 37
     };
+    for (int i = 0; i < NUMERO_JUGADORES_MUS; i++)
+        VERIFICAR(tieneJuego(manos[i]));
     VERIFICAR(ganadorJuego(manos, 0) == 1);
     liberarManos(manos);
 
@@ -173,6 +175,8 @@ static void testPunto(void) {
         manoDe(AS, AS, AS, AS),            // 4, sin juego
         manoDe(REY, REY, CABALLO, DOS),    // 31
     };
+    VERIFICAR(!tieneJuego(manos3[0]));
+    VERIFICAR(tieneJuego(manos3[1]));
     VERIFICAR(ganadorJuego(manos3, 0) == 1);
     VERIFICAR(ganadorJuego(manos3, 2) == 3);
     liberarManos(manos3);
