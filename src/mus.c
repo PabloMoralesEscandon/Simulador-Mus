@@ -214,6 +214,15 @@ int sumaMano(Mano mano) {
 
 int tieneJuego(Mano mano) { return sumaMano(mano) >= 31; }
 
+int tantosJuego(Mano mano) {
+    int suma = sumaMano(mano);
+    if (suma == 31)
+        return 3;
+    if (suma > 31)
+        return 2;
+    return 0;
+}
+
 /** Posición del juego en ORDEN_PUNTO (mayor es mejor); -1 sin juego. */
 static int claveJuego(Mano mano) {
     int valor = sumaMano(mano);
