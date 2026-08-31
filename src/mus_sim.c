@@ -12,6 +12,53 @@ const ConteoMus BARAJA_MUS_COMPLETA = {.c = {8, 4, 4, 4, 4, 4, 4, 8}};
 static const int NUMERO_ESPANOL_DESDE_MUS[CERDO + 1] = {
     AS, CUATRO, CINCO, SEIS, SIETE, SOTA, CABALLO, REY};
 
+int jugarFaseMus(PartidaMus *partida,
+                 const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS]) {
+    if (partida == NULL || estrategias == NULL || partida->mano < 0 ||
+        partida->mano >= NUMERO_JUGADORES_MUS)
+        return 1;
+    for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++)
+        if (estrategias[jugador].decidirMus == NULL ||
+            estrategias[jugador].elegirDescartes == NULL)
+            return 1;
+
+    for (;;) {
+        int decisiones[NUMERO_JUGADORES_MUS] = {0};
+        for (int turno = 0; turno < NUMERO_JUGADORES_MUS; turno++) {
+            int jugador = (partida->mano + turno) % NUMERO_JUGADORES_MUS;
+            decisiones[jugador] = estrategias[jugador].decidirMus(
+                &partida->manos[jugador], jugador, partida->mano,
+                partida->tantos, estrategias[jugador].contexto);
+            if (decisiones[jugador] == 0)
+                return 0;
+            if (decisiones[jugador] != 1)
+                return 1;
+        }
+        if (todosDanMus(decisiones) != 1)
+            return 1;
+
+        int descartadas[NUMERO_JUGADORES_MUS][TAMANO_MANO_MUS] = {{0}};
+        for (int turno = 0; turno < NUMERO_JUGADORES_MUS; turno++) {
+            int jugador = (partida->mano + turno) % NUMERO_JUGADORES_MUS;
+            if (estrategias[jugador].elegirDescartes(
+                    &partida->manos[jugador], jugador, descartadas[jugador],
+                    estrategias[jugador].contexto))
+                return 1;
+            int numeroDescartes = 0;
+            for (int carta = 0; carta < TAMANO_MANO_MUS; carta++) {
+                if (descartadas[jugador][carta] != 0 &&
+                    descartadas[jugador][carta] != 1)
+                    return 1;
+                numeroDescartes += descartadas[jugador][carta];
+            }
+            if (numeroDescartes == 0)
+                return 1;
+        }
+        if (descartarManosMus(partida, descartadas))
+            return 1;
+    }
+}
+
 int simularRondaMus(PartidaMus *partida) {
     if (partida == NULL)
         return -1;

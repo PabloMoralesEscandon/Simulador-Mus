@@ -19,6 +19,58 @@ static Mano manoDe(int n1, int n2, int n3, int n4) {
     return mano;
 }
 
+typedef struct {
+    int decisiones;
+    int descartes;
+} ContextoMusPrueba;
+
+static int darMusUnaVez(const Mano *mano, int jugador, int manoPartida,
+                        const int tantos[2], void *contexto) {
+    (void)mano;
+    (void)jugador;
+    (void)manoPartida;
+    (void)tantos;
+    ContextoMusPrueba *estado = contexto;
+    return estado->decisiones++ == 0;
+}
+
+static int descartarPrimera(const Mano *mano, int jugador,
+                            int descartadas[TAMANO_MANO_MUS],
+                            void *contexto) {
+    (void)mano;
+    (void)jugador;
+    ContextoMusPrueba *estado = contexto;
+    descartadas[0] = 1;
+    estado->descartes++;
+    return 0;
+}
+
+static void testJugarFaseMus(void) {
+    VERIFICAR(jugarFaseMus(NULL, NULL) == 1);
+
+    PartidaMus partida;
+    VERIFICAR(iniciarPartidaMus(&partida) == 0);
+    VERIFICAR(resetearMazo(&partida) == 0);
+    VERIFICAR(repartirManos(&partida) == 0);
+    ContextoMusPrueba contextos[NUMERO_JUGADORES_MUS] = {{0}};
+    EstrategiaMus estrategias[NUMERO_JUGADORES_MUS] = {{0}};
+    for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++) {
+        estrategias[jugador].decidirMus = darMusUnaVez;
+        estrategias[jugador].elegirDescartes = descartarPrimera;
+        estrategias[jugador].contexto = &contextos[jugador];
+    }
+    VERIFICAR(jugarFaseMus(&partida, estrategias) == 0);
+    VERIFICAR(partida.baraja.siguiente_carta == 20);
+    VERIFICAR(partida.descartes.siguiente_carta == 4);
+    VERIFICAR(contextos[0].decisiones == 2);
+    VERIFICAR(contextos[0].descartes == 1);
+    for (int jugador = 1; jugador < NUMERO_JUGADORES_MUS; jugador++) {
+        VERIFICAR(contextos[jugador].decisiones == 1);
+        VERIFICAR(contextos[jugador].descartes == 1);
+    }
+    VERIFICAR(destruirPartidaMus(&partida) == 0);
+}
+
 static void testSimularRondaMus(void) {
     VERIFICAR(simularRondaMus(NULL) == -1);
 
@@ -188,6 +240,7 @@ static void testLogPartidaCompleta(void) {
 
 int main(void) {
     srand(42);
+    testJugarFaseMus();
     testSimularRondaMus();
     testPartidaPorRondas();
     testSimularPartidaMus();
