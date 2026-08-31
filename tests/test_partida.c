@@ -120,6 +120,28 @@ static void testTodosDanMus(void) {
     VERIFICAR(todosDanMus(invalidas) == -1);
 }
 
+static void testDescartarManosMus(void) {
+    VERIFICAR(descartarManosMus(NULL, NULL) == 1);
+
+    PartidaMus partida;
+    iniciarPartidaMus(&partida);
+    barajar(&partida.baraja);
+    repartirManos(&partida);
+    partida.mano = 2;
+    int descartadas[NUMERO_JUGADORES_MUS][TAMANO_MANO_MUS] = {
+        {1, 0, 0, 0}, {1, 1, 0, 0}, {1, 1, 1, 0}, {1, 1, 1, 1}};
+    VERIFICAR(descartarManosMus(&partida, descartadas) == 0);
+    VERIFICAR(partida.baraja.siguiente_carta == 26);
+    VERIFICAR(partida.descartes.siguiente_carta == 10);
+    VERIFICAR(duplicadosEnManos(&partida) == 0);
+
+    descartadas[0][0] = 2;
+    size_t cursor = partida.baraja.siguiente_carta;
+    VERIFICAR(descartarManosMus(&partida, descartadas) == 1);
+    VERIFICAR(partida.baraja.siguiente_carta == cursor);
+    destruirPartidaMus(&partida);
+}
+
 static void testRecicladoSinDuplicados(void) {
     PartidaMus partida;
     iniciarPartidaMus(&partida);
@@ -256,6 +278,7 @@ int main(void) {
     testRepartirManos();
     testManoSeDescarta();
     testTodosDanMus();
+    testDescartarManosMus();
     testRecicladoSinDuplicados();
     testPuntuarPares();
     testPuntuarJuegoOPunto();

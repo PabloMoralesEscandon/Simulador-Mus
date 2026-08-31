@@ -483,6 +483,27 @@ int todosDanMus(const int decisiones[NUMERO_JUGADORES_MUS]) {
     return 1;
 }
 
+int descartarManosMus(
+    PartidaMus *partida,
+    int descartadas[NUMERO_JUGADORES_MUS][TAMANO_MANO_MUS]) {
+    if (partida == NULL || descartadas == NULL || partida->mano < 0 ||
+        partida->mano >= NUMERO_JUGADORES_MUS)
+        return 1;
+    for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++)
+        for (int carta = 0; carta < TAMANO_MANO_MUS; carta++)
+            if (descartadas[jugador][carta] != 0 &&
+                descartadas[jugador][carta] != 1)
+                return 1;
+
+    for (int turno = 0; turno < NUMERO_JUGADORES_MUS; turno++) {
+        int jugador = (partida->mano + turno) % NUMERO_JUGADORES_MUS;
+        if (manoSeDescarta(partida, &partida->manos[jugador],
+                           descartadas[jugador]))
+            return 1;
+    }
+    return 0;
+}
+
 int puntuarRonda(PartidaMus *partida, int ganador, int tantos) {
     if (ganador == 0 || ganador == 2) {
         partida->tantos[0] += tantos;
