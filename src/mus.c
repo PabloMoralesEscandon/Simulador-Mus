@@ -287,6 +287,27 @@ int parejaTieneJuego(Mano manos[NUMERO_JUGADORES_MUS], int pareja) {
     return tieneJuego(manos[pareja]) || tieneJuego(manos[pareja + 2]);
 }
 
+int puntuarJuegoOPuntoDePareja(PartidaMus *partida, Ronda ronda, int pareja,
+                               int tantosEnvite) {
+    if (partida == NULL || pareja < 0 || pareja > 1 || tantosEnvite < 0)
+        return -1;
+    int tantos = tantosEnvite;
+    if (ronda == JUEGO) {
+        if (parejaTieneJuego(partida->manos, pareja) != 1)
+            return -1;
+        tantos += tantosJuego(partida->manos[pareja]) +
+                  tantosJuego(partida->manos[pareja + 2]);
+    } else if (ronda == PUNTO) {
+        if (parejaTieneJuego(partida->manos, 0) != 0 ||
+            parejaTieneJuego(partida->manos, 1) != 0)
+            return -1;
+        tantos += 1;
+    } else {
+        return -1;
+    }
+    return puntuarRonda(partida, pareja, tantos);
+}
+
 int puntuarJuegoOPunto(PartidaMus *partida) {
     if (partida == NULL || partida->envites_actuales.juego < 0 ||
         partida->envites_actuales.punto < 0)
@@ -301,17 +322,15 @@ int puntuarJuegoOPunto(PartidaMus *partida) {
             return -1;
         int ganador = ganadorJuego(partida->manos, partida->mano);
         int pareja = ganador % 2;
-        int tantos = tantosJuego(partida->manos[pareja]) +
-                     tantosJuego(partida->manos[pareja + 2]) +
-                     partida->envites_actuales.juego;
-        return puntuarRonda(partida, ganador, tantos);
+        return puntuarJuegoOPuntoDePareja(
+            partida, JUEGO, pareja, partida->envites_actuales.juego);
     }
 
     if (partida->envites_actuales.juego != 0)
         return -1;
     int ganador = ganadorPunto(partida->manos, partida->mano);
-    return puntuarRonda(partida, ganador,
-                        partida->envites_actuales.punto + 1);
+    return puntuarJuegoOPuntoDePareja(
+        partida, PUNTO, ganador % 2, partida->envites_actuales.punto);
 }
 
 /** Posición del juego en ORDEN_PUNTO (mayor es mejor); -1 sin juego. */

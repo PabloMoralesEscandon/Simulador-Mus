@@ -387,6 +387,30 @@ static void testPuntuarJuegoOPunto(void) {
     destruirPartidaMus(&partida);
 }
 
+static void testPuntuarJuegoOPuntoDePareja(void) {
+    VERIFICAR(puntuarJuegoOPuntoDePareja(NULL, JUEGO, 0, 0) == -1);
+    PartidaMus partida;
+    iniciarPartidaMus(&partida);
+    for (int i = 0; i < NUMERO_JUGADORES_MUS; i++)
+        destruirMano(&partida.manos[i]);
+    partida.manos[0] = manoDe(REY, REY, REY, AS);       // 31: 3
+    partida.manos[1] = manoDe(REY, REY, REY, SIETE);    // 37: 2
+    partida.manos[2] = manoDe(REY, REY, SEIS, SEIS);    // 32: 2
+    partida.manos[3] = manoDe(REY, REY, SOTA, CABALLO); // 40: 2
+    VERIFICAR(puntuarJuegoOPuntoDePareja(&partida, JUEGO, 1, 4) == 0);
+    VERIFICAR(partida.tantos[1] == 8);
+
+    for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++) {
+        partida.manos[jugador].cartas[0].numero = AS;
+        partida.manos[jugador].cartas[1].numero = CUATRO;
+        partida.manos[jugador].cartas[2].numero = CINCO;
+        partida.manos[jugador].cartas[3].numero = SEIS;
+    }
+    VERIFICAR(puntuarJuegoOPuntoDePareja(&partida, PUNTO, 0, 2) == 0);
+    VERIFICAR(partida.tantos[0] == 3);
+    destruirPartidaMus(&partida);
+}
+
 static void testPuntuarGrande(void) {
     VERIFICAR(puntuarGrande(NULL) == -1);
 
@@ -446,6 +470,7 @@ int main(void) {
     testPuntuarPares();
     testPuntuarParesDePareja();
     testPuntuarJuegoOPunto();
+    testPuntuarJuegoOPuntoDePareja();
     testPuntuarGrande();
     testPuntuarChica();
     return resumenPruebas("test_partida");
