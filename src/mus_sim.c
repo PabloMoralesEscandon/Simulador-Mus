@@ -59,6 +59,85 @@ int jugarFaseMus(PartidaMus *partida,
     }
 }
 
+static int puedeApostarLance(const PartidaMus *partida, int jugador,
+                             Ronda ronda) {
+    if (ronda == PARES)
+        return tipoPares(partida->manos[jugador]) != NO_PAR;
+    if (ronda == JUEGO)
+        return tieneJuego(partida->manos[jugador]);
+    return 1;
+}
+
+int jugarLanceEnvite(
+    PartidaMus *partida, Ronda ronda,
+    const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS],
+    EnviteMus *resultado) {
+    if (partida == NULL || estrategias == NULL || resultado == NULL ||
+        partida->mano < 0 || partida->mano >= NUMERO_JUGADORES_MUS ||
+        ronda < GRANDE || ronda > PUNTO)
+        return -1;
+    for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++)
+        if (estrategias[jugador].decidirEnvite == NULL)
+            return -1;
+
+    int pareja0 = 1;
+    int pareja1 = 1;
+    if (ronda == PARES) {
+        pareja0 = parejaTienePares(partida->manos, 0);
+        pareja1 = parejaTienePares(partida->manos, 1);
+    } else if (ronda == JUEGO) {
+        pareja0 = parejaTieneJuego(partida->manos, 0);
+        pareja1 = parejaTieneJuego(partida->manos, 1);
+    } else if (ronda == PUNTO &&
+               (parejaTieneJuego(partida->manos, 0) ||
+                parejaTieneJuego(partida->manos, 1))) {
+        return -1;
+    }
+
+    if (iniciarEnviteMus(resultado))
+        return -1;
+    if (!pareja0 || !pareja1)
+        return registrarEnviteMus(partida, ronda, resultado);
+
+    int elegibles = 0;
+    for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++)
+        elegibles += puedeApostarLance(partida, jugador, ronda);
+
+    int jugador = partida->mano;
+    int pasos = 0;
+    for (;;) {
+        if (!puedeApostarLance(partida, jugador, ronda) ||
+            (resultado->estado != ENVITE_AL_PASO &&
+             jugador % 2 == resultado->parejaApostadora)) {
+            jugador = (jugador + 1) % NUMERO_JUGADORES_MUS;
+            continue;
+        }
+
+        AccionEnviteMus accion = estrategias[jugador].decidirEnvite(
+            &partida->manos[jugador], jugador, partida->mano,
+            partida->tantos, ronda, resultado,
+            estrategias[jugador].contexto);
+        if (accion.tipo == ACCION_PASAR) {
+            if (resultado->estado != ENVITE_AL_PASO)
+                return -1;
+            pasos++;
+            if (pasos == elegibles)
+                return registrarEnviteMus(partida, ronda, resultado);
+        } else {
+            if (aplicarAccionEnviteMus(resultado, jugador % 2, accion))
+                return -1;
+            pasos = 0;
+            if (resultado->estado == ORDAGO_ACEPTADO)
+                return resolverOrdagoMus(partida, ronda, resultado);
+            if (resultado->estado == ENVITE_ACEPTADO ||
+                resultado->estado == ENVITE_RECHAZADO ||
+                resultado->estado == ORDAGO_RECHAZADO)
+                return registrarEnviteMus(partida, ronda, resultado);
+        }
+        jugador = (jugador + 1) % NUMERO_JUGADORES_MUS;
+    }
+}
+
 int simularRondaMusConEstrategias(
     PartidaMus *partida,
     const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS]) {

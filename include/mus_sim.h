@@ -24,16 +24,30 @@ typedef int (*SeleccionDescartes)(const Mano *mano, int jugador,
                                   int descartadas[TAMANO_MANO_MUS],
                                   void *contexto);
 
+/** Decide la siguiente acción de un jugador en la negociación de un lance. */
+typedef AccionEnviteMus (*DecisionEnvite)(const Mano *mano, int jugador,
+                                          int manoPartida,
+                                          const int tantos[2], Ronda ronda,
+                                          const EnviteMus *envite,
+                                          void *contexto);
+
 /** Decisiones inyectables de un jugador durante la fase de mus. */
 typedef struct {
     DecisionMus decidirMus;
     SeleccionDescartes elegirDescartes;
+    DecisionEnvite decidirEnvite;
     void *contexto;
 } EstrategiaMus;
 
 /** Ejecuta mus y descartes repetidos hasta que un jugador corta. */
 int jugarFaseMus(PartidaMus *partida,
                  const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS]);
+
+/** Negocia y registra el envite de un lance; devuelve 0, 1, 2 o -1. */
+int jugarLanceEnvite(
+    PartidaMus *partida, Ronda ronda,
+    const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS],
+    EnviteMus *resultado);
 
 /** Juega una ronda: reparte y puntúa los cuatro lances (1 tanto cada uno)
  *  y pasa la mano al siguiente jugador.

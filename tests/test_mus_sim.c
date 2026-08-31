@@ -22,6 +22,9 @@ static Mano manoDe(int n1, int n2, int n3, int n4) {
 typedef struct {
     int decisiones;
     int descartes;
+    AccionEnviteMus acciones[4];
+    int numeroAcciones;
+    int siguienteAccion;
 } ContextoMusPrueba;
 
 static int darMusUnaVez(const Mano *mano, int jugador, int manoPartida,
@@ -43,6 +46,48 @@ static int descartarPrimera(const Mano *mano, int jugador,
     descartadas[0] = 1;
     estado->descartes++;
     return 0;
+}
+
+static AccionEnviteMus decidirEnvitePrueba(
+    const Mano *mano, int jugador, int manoPartida, const int tantos[2],
+    Ronda ronda, const EnviteMus *envite, void *contexto) {
+    (void)mano;
+    (void)jugador;
+    (void)manoPartida;
+    (void)tantos;
+    (void)ronda;
+    (void)envite;
+    ContextoMusPrueba *estado = contexto;
+    if (estado->siguienteAccion >= estado->numeroAcciones)
+        return (AccionEnviteMus){.tipo = ACCION_PASAR};
+    return estado->acciones[estado->siguienteAccion++];
+}
+
+static void testJugarLanceEnvite(void) {
+    VERIFICAR(jugarLanceEnvite(NULL, GRANDE, NULL, NULL) == -1);
+    PartidaMus partida;
+    VERIFICAR(iniciarPartidaMus(&partida) == 0);
+    VERIFICAR(resetearMazo(&partida) == 0);
+    VERIFICAR(repartirManos(&partida) == 0);
+    ContextoMusPrueba contextos[NUMERO_JUGADORES_MUS] = {{0}};
+    EstrategiaMus estrategias[NUMERO_JUGADORES_MUS] = {{0}};
+    for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++) {
+        estrategias[jugador].decidirEnvite = decidirEnvitePrueba;
+        estrategias[jugador].contexto = &contextos[jugador];
+    }
+    contextos[0].acciones[0] =
+        (AccionEnviteMus){.tipo = ACCION_ENVIDAR, .cantidadTotal = 2};
+    contextos[0].numeroAcciones = 1;
+    contextos[1].acciones[0] = (AccionEnviteMus){.tipo = ACCION_QUERER};
+    contextos[1].numeroAcciones = 1;
+    EnviteMus resultado;
+    VERIFICAR(jugarLanceEnvite(&partida, GRANDE, estrategias, &resultado) ==
+              0);
+    VERIFICAR(resultado.estado == ENVITE_ACEPTADO);
+    VERIFICAR(partida.envites_actuales.grande == 2);
+    VERIFICAR(contextos[0].siguienteAccion == 1);
+    VERIFICAR(contextos[1].siguienteAccion == 1);
+    VERIFICAR(destruirPartidaMus(&partida) == 0);
 }
 
 static void testJugarFaseMus(void) {
@@ -259,6 +304,7 @@ static void testLogPartidaCompleta(void) {
 int main(void) {
     srand(42);
     testJugarFaseMus();
+    testJugarLanceEnvite();
     testSimularRondaMus();
     testSimularRondaMusConEstrategias();
     testPartidaPorRondas();
