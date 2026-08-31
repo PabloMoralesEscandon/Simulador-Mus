@@ -333,6 +333,23 @@ static void testPuntuarPares(void) {
     destruirPartidaMus(&partida);
 }
 
+static void testPuntuarParesDePareja(void) {
+    VERIFICAR(puntuarParesDePareja(NULL, 0, 0) == -1);
+    PartidaMus partida;
+    iniciarPartidaMus(&partida);
+    for (int i = 0; i < NUMERO_JUGADORES_MUS; i++)
+        destruirMano(&partida.manos[i]);
+    partida.manos[0] = manoDe(REY, REY, AS, CUATRO);     // Par: 1
+    partida.manos[1] = manoDe(CABALLO, CABALLO, AS, AS); // Dúplex: 3
+    partida.manos[2] = manoDe(SOTA, SOTA, SOTA, CUATRO); // Medias: 2
+    partida.manos[3] = manoDe(SIETE, SIETE, AS, CUATRO); // Par: 1
+    VERIFICAR(puntuarParesDePareja(&partida, 0, 0) == 0);
+    VERIFICAR(partida.tantos[0] == 3);
+    VERIFICAR(puntuarParesDePareja(&partida, 1, 4) == 0);
+    VERIFICAR(partida.tantos[1] == 8);
+    destruirPartidaMus(&partida);
+}
+
 static void testPuntuarJuegoOPunto(void) {
     VERIFICAR(puntuarJuegoOPunto(NULL) == -1);
 
@@ -427,6 +444,7 @@ int main(void) {
     testDescartarManosMus();
     testRecicladoSinDuplicados();
     testPuntuarPares();
+    testPuntuarParesDePareja();
     testPuntuarJuegoOPunto();
     testPuntuarGrande();
     testPuntuarChica();

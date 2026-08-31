@@ -159,6 +159,9 @@ int parejaTienePares(Mano manos[NUMERO_JUGADORES_MUS], int pareja);
 /** Puntúa los pares y su envite aceptado; 0, 1 o 2 si éxito, -1 si error. */
 int puntuarPares(PartidaMus *partida);
 
+/** Puntúa los pares de una pareja ganadora y un envite adicional. */
+int puntuarParesDePareja(PartidaMus *partida, int pareja, int tantosEnvite);
+
 /** Puntos de la carta para el juego: pitos 1, figuras y treses 10. */
 int valorPuntoMus(Carta carta);
 

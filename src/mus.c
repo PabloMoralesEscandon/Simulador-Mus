@@ -212,6 +212,16 @@ int parejaTienePares(Mano manos[NUMERO_JUGADORES_MUS], int pareja) {
            tipoPares(manos[pareja + 2]) != NO_PAR;
 }
 
+int puntuarParesDePareja(PartidaMus *partida, int pareja, int tantosEnvite) {
+    if (partida == NULL || pareja < 0 || pareja > 1 || tantosEnvite < 0 ||
+        parejaTienePares(partida->manos, pareja) != 1)
+        return -1;
+
+    int tantos = tantosPares(partida->manos[pareja]) +
+                 tantosPares(partida->manos[pareja + 2]) + tantosEnvite;
+    return puntuarRonda(partida, pareja, tantos);
+}
+
 int puntuarPares(PartidaMus *partida) {
     if (partida == NULL || partida->envites_actuales.pares < 0)
         return -1;
@@ -225,10 +235,8 @@ int puntuarPares(PartidaMus *partida) {
 
     int ganador = ganadorPar(partida->manos, partida->mano);
     int pareja = ganador % 2;
-    int tantos = tantosPares(partida->manos[pareja]) +
-                 tantosPares(partida->manos[pareja + 2]) +
-                 partida->envites_actuales.pares;
-    return puntuarRonda(partida, ganador, tantos);
+    return puntuarParesDePareja(partida, pareja,
+                                partida->envites_actuales.pares);
 }
 
 int valorPuntoMus(Carta carta) {
