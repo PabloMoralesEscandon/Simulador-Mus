@@ -7,9 +7,6 @@
 
 #include "mus.h"
 
-/** Lances del mus. */
-typedef enum { GRANDE, CHICA, PARES, JUEGO } Ronda;
-
 /** Restricciones sobre las manos libres al simular (aún sin uso). */
 typedef enum { NADA, TIENE_JUEGO, TIENE_31, PAR_Y_JUEGO } Condicion;
 

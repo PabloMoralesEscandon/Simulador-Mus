@@ -34,6 +34,7 @@ static int duplicadosEnManos(PartidaMus *partida) {
 
 static void testIniciarDestruirPartida(void) {
     VERIFICAR(reiniciarEnvitesRonda(NULL) == 1);
+    VERIFICAR(iniciarEnviteMus(NULL) == 1);
     VERIFICAR(iniciarPartidaMus(NULL) == 1);
     VERIFICAR(destruirPartidaMus(NULL) == 1);
 
@@ -63,6 +64,15 @@ static void testIniciarDestruirPartida(void) {
     VERIFICAR(partida.descartes.cartas == NULL);
     for (int m = 0; m < NUMERO_JUGADORES_MUS; m++)
         VERIFICAR(partida.manos[m].cartas == NULL);
+}
+
+static void testIniciarEnviteMus(void) {
+    EnviteMus envite;
+    VERIFICAR(iniciarEnviteMus(&envite) == 0);
+    VERIFICAR(envite.estado == ENVITE_AL_PASO);
+    VERIFICAR(envite.cantidad == 0);
+    VERIFICAR(envite.cantidadAnterior == 0);
+    VERIFICAR(envite.parejaApostadora == -1);
 }
 
 static void testRepartirManos(void) {
@@ -275,6 +285,7 @@ static void testPuntuarChica(void) {
 int main(void) {
     srand(88);
     testIniciarDestruirPartida();
+    testIniciarEnviteMus();
     testRepartirManos();
     testManoSeDescarta();
     testTodosDanMus();

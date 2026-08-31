@@ -31,12 +31,35 @@ typedef enum {
 /** Jugadas del lance de pares, de peor a mejor. */
 enum { NO_PAR, PAR, MEDIAS, DUPLEX };
 
+/** Lances de una mano de mus. */
+typedef enum { GRANDE, CHICA, PARES, JUEGO, PUNTO } Ronda;
+
+/** Estado de una negociación de envite. */
+typedef enum {
+    ENVITE_AL_PASO,
+    ENVITE_PENDIENTE,
+    ENVITE_ACEPTADO,
+    ENVITE_RECHAZADO,
+    ORDAGO_PENDIENTE,
+    ORDAGO_ACEPTADO,
+    ORDAGO_RECHAZADO
+} EstadoEnviteMus;
+
+/** Negociación activa de un lance entre las dos parejas. */
 typedef struct {
-    size_t grande;
-    size_t chica;
-    size_t pares;
-    size_t juego;
-    size_t punto;
+    EstadoEnviteMus estado;
+    int cantidad;
+    int cantidadAnterior;
+    int parejaApostadora;
+} EnviteMus;
+
+/** Importes aceptados que se tantean al final de la mano. */
+typedef struct {
+    int grande;
+    int chica;
+    int pares;
+    int juego;
+    int punto;
 } EnviteRonda;
 
 /** Estado de una partida por parejas: jugadores 0-2 contra 1-3. */
@@ -51,6 +74,9 @@ typedef struct {
 
 /** Reinicia a cero los envites registrados para una ronda. */
 int reiniciarEnvitesRonda(EnviteRonda *envites);
+
+/** Inicializa una negociación de envite al paso. */
+int iniciarEnviteMus(EnviteMus *envite);
 
 /** Reserva una mano de TAMANO_MANO_MUS cartas. */
 int crearManoMus(Mano *mano);

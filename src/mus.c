@@ -1,4 +1,3 @@
-#include <limits.h>
 #include <stdlib.h>
 
 #include "baraja_espanola.h"
@@ -73,12 +72,12 @@ int ganadorGrande(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
 }
 
 static int puntuarLanceSimple(
-    PartidaMus *partida, size_t envite,
+    PartidaMus *partida, int envite,
     int (*ganadorLance)(Mano[NUMERO_JUGADORES_MUS], int)) {
-    if (partida == NULL || ganadorLance == NULL || envite > INT_MAX)
+    if (partida == NULL || ganadorLance == NULL || envite < 0)
         return -1;
     int ganador = ganadorLance(partida->manos, partida->mano);
-    int tantos = envite == 0 ? 1 : (int)envite;
+    int tantos = envite == 0 ? 1 : envite;
     return puntuarRonda(partida, ganador, tantos);
 }
 
@@ -214,7 +213,7 @@ int parejaTienePares(Mano manos[NUMERO_JUGADORES_MUS], int pareja) {
 }
 
 int puntuarPares(PartidaMus *partida) {
-    if (partida == NULL || partida->envites_actuales.pares > INT_MAX)
+    if (partida == NULL || partida->envites_actuales.pares < 0)
         return -1;
 
     int pares0 = parejaTienePares(partida->manos, 0);
@@ -228,7 +227,7 @@ int puntuarPares(PartidaMus *partida) {
     int pareja = ganador % 2;
     int tantos = tantosPares(partida->manos[pareja]) +
                  tantosPares(partida->manos[pareja + 2]) +
-                 (int)partida->envites_actuales.pares;
+                 partida->envites_actuales.pares;
     return puntuarRonda(partida, ganador, tantos);
 }
 
@@ -281,8 +280,8 @@ int parejaTieneJuego(Mano manos[NUMERO_JUGADORES_MUS], int pareja) {
 }
 
 int puntuarJuegoOPunto(PartidaMus *partida) {
-    if (partida == NULL || partida->envites_actuales.juego > INT_MAX ||
-        partida->envites_actuales.punto > INT_MAX)
+    if (partida == NULL || partida->envites_actuales.juego < 0 ||
+        partida->envites_actuales.punto < 0)
         return -1;
 
     int juego0 = parejaTieneJuego(partida->manos, 0);
@@ -296,7 +295,7 @@ int puntuarJuegoOPunto(PartidaMus *partida) {
         int pareja = ganador % 2;
         int tantos = tantosJuego(partida->manos[pareja]) +
                      tantosJuego(partida->manos[pareja + 2]) +
-                     (int)partida->envites_actuales.juego;
+                     partida->envites_actuales.juego;
         return puntuarRonda(partida, ganador, tantos);
     }
 
@@ -304,7 +303,7 @@ int puntuarJuegoOPunto(PartidaMus *partida) {
         return -1;
     int ganador = ganadorPunto(partida->manos, partida->mano);
     return puntuarRonda(partida, ganador,
-                        (int)partida->envites_actuales.punto + 1);
+                        partida->envites_actuales.punto + 1);
 }
 
 /** Posición del juego en ORDEN_PUNTO (mayor es mejor); -1 sin juego. */
@@ -350,6 +349,14 @@ int reiniciarEnvitesRonda(EnviteRonda *envites) {
     if (envites == NULL)
         return 1;
     *envites = (EnviteRonda){0};
+    return 0;
+}
+
+int iniciarEnviteMus(EnviteMus *envite) {
+    if (envite == NULL)
+        return 1;
+    *envite = (EnviteMus){.estado = ENVITE_AL_PASO,
+                          .parejaApostadora = -1};
     return 0;
 }
 
