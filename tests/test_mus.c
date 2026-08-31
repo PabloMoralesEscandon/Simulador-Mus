@@ -92,6 +92,10 @@ static void testPar(void) {
         manoDe(REY, REY, REY, CUATRO),     // Medias de reyes
     };
     VERIFICAR(ganadorPar(manos, 0) == 2);
+    VERIFICAR(tipoPares(manos[0]) == NO_PAR);
+    VERIFICAR(tipoPares(manos[1]) == PAR);
+    VERIFICAR(tipoPares(manos[2]) == DUPLEX);
+    VERIFICAR(tipoPares(manos[3]) == MEDIAS);
     liberarManos(manos);
 
     // Entre pares gana el más alto, y el tres cuenta como rey

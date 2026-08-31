@@ -143,6 +143,17 @@ int clavePar(Mano mano) {
     }
 }
 
+int tipoPares(Mano mano) {
+    int clave = clavePar(mano);
+    if (clave >= 100)
+        return DUPLEX;
+    if (clave >= 10)
+        return MEDIAS;
+    if (clave > 0)
+        return PAR;
+    return NO_PAR;
+}
+
 int ganadorPar(Mano manos[NUMERO_JUGADORES_MUS], int mano) {
     int max = clavePar(manos[mano]);
     int ganador = mano;

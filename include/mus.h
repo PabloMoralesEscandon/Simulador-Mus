@@ -73,6 +73,9 @@ int ganadorChica(Mano manos[NUMERO_JUGADORES_MUS], int mano);
 /** Clave comparable de pares: 0 sin pares; codifica jugada y alturas. */
 int clavePar(Mano mano);
 
+/** Tipo de pares de la mano: NO_PAR, PAR, MEDIAS o DUPLEX. */
+int tipoPares(Mano mano);
+
 /** Ganador del lance de pares. */
 int ganadorPar(Mano manos[NUMERO_JUGADORES_MUS], int mano);
 
