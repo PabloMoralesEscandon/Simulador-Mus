@@ -150,36 +150,78 @@ int simularRondaMusConEstrategias(
     if (jugarFaseMus(partida, estrategias))
         return -1;
     logManos(LOG_LANCES, partida);
-    logGanadorLance(LOG_LANCES, "Grande",
-                    ganadorGrande(partida->manos, partida->mano));
-    int resultado = puntuarGrande(partida);
+    EnviteMus envite;
+    int resultado = jugarLanceEnvite(partida, GRANDE, estrategias, &envite);
+    if (resultado)
+        return resultado;
+    if (envite.estado == ENVITE_RECHAZADO ||
+        envite.estado == ORDAGO_RECHAZADO) {
+        logGanadorLance(LOG_LANCES, "Grande", envite.parejaApostadora);
+    } else {
+        logGanadorLance(LOG_LANCES, "Grande",
+                        ganadorGrande(partida->manos, partida->mano));
+        resultado = puntuarGrande(partida);
+        if (resultado)
+            return resultado;
+    }
+
+    resultado = jugarLanceEnvite(partida, CHICA, estrategias, &envite);
+    if (resultado)
+        return resultado;
+    if (envite.estado == ENVITE_RECHAZADO ||
+        envite.estado == ORDAGO_RECHAZADO) {
+        logGanadorLance(LOG_LANCES, "Chica", envite.parejaApostadora);
+    } else {
+        logGanadorLance(LOG_LANCES, "Chica",
+                        ganadorChica(partida->manos, partida->mano));
+        resultado = puntuarChica(partida);
+        if (resultado)
+            return resultado;
+    }
+
+    resultado = jugarLanceEnvite(partida, PARES, estrategias, &envite);
+    if (resultado)
+        return resultado;
+    if (envite.estado == ENVITE_RECHAZADO ||
+        envite.estado == ORDAGO_RECHAZADO) {
+        logGanadorLance(LOG_LANCES, "Pares", envite.parejaApostadora);
+        resultado = puntuarParesDePareja(partida, envite.parejaApostadora, 0);
+    } else {
+        if (parejaTienePares(partida->manos, 0) ||
+            parejaTienePares(partida->manos, 1))
+            logGanadorLance(LOG_LANCES, "Pares",
+                            ganadorPar(partida->manos, partida->mano));
+        resultado = puntuarPares(partida);
+    }
     if (resultado)
         return resultado;
 
-    logGanadorLance(LOG_LANCES, "Chica",
-                    ganadorChica(partida->manos, partida->mano));
-    resultado = puntuarChica(partida);
+    Ronda ultimaRonda = parejaTieneJuego(partida->manos, 0) ||
+                                parejaTieneJuego(partida->manos, 1)
+                            ? JUEGO
+                            : PUNTO;
+    resultado = jugarLanceEnvite(partida, ultimaRonda, estrategias, &envite);
+    if (resultado)
+        return resultado;
+    if (envite.estado == ENVITE_RECHAZADO ||
+        envite.estado == ORDAGO_RECHAZADO) {
+        logGanadorLance(LOG_LANCES,
+                        ultimaRonda == JUEGO ? "Juego" : "Punto",
+                        envite.parejaApostadora);
+        resultado = puntuarJuegoOPuntoDePareja(
+            partida, ultimaRonda, envite.parejaApostadora, 0);
+    } else {
+        if (ultimaRonda == JUEGO)
+            logGanadorLance(LOG_LANCES, "Juego",
+                            ganadorJuego(partida->manos, partida->mano));
+        else
+            logGanadorLance(LOG_LANCES, "Punto",
+                            ganadorPunto(partida->manos, partida->mano));
+        resultado = puntuarJuegoOPunto(partida);
+    }
     if (resultado)
         return resultado;
 
-    if (parejaTienePares(partida->manos, 0) ||
-        parejaTienePares(partida->manos, 1))
-        logGanadorLance(LOG_LANCES, "Pares",
-                        ganadorPar(partida->manos, partida->mano));
-    resultado = puntuarPares(partida);
-    if (resultado)
-        return resultado;
-
-    if (parejaTieneJuego(partida->manos, 0) ||
-        parejaTieneJuego(partida->manos, 1))
-        logGanadorLance(LOG_LANCES, "Juego",
-                        ganadorJuego(partida->manos, partida->mano));
-    else
-        logGanadorLance(LOG_LANCES, "Punto",
-                        ganadorPunto(partida->manos, partida->mano));
-    resultado = puntuarJuegoOPunto(partida);
-    if (resultado)
-        return resultado;
     logTantos(LOG_RONDAS, partida);
     partida->mano = (partida->mano + 1) % NUMERO_JUGADORES_MUS;
     return 0;
@@ -204,11 +246,25 @@ static int sinDescartes(const Mano *mano, int jugador,
     return 0;
 }
 
+static AccionEnviteMus pasarEnvite(
+    const Mano *mano, int jugador, int manoPartida, const int tantos[2],
+    Ronda ronda, const EnviteMus *envite, void *contexto) {
+    (void)mano;
+    (void)jugador;
+    (void)manoPartida;
+    (void)tantos;
+    (void)ronda;
+    (void)envite;
+    (void)contexto;
+    return (AccionEnviteMus){.tipo = ACCION_PASAR};
+}
+
 int simularRondaMus(PartidaMus *partida) {
     EstrategiaMus estrategias[NUMERO_JUGADORES_MUS] = {{0}};
     for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++) {
         estrategias[jugador].decidirMus = cortarMus;
         estrategias[jugador].elegirDescartes = sinDescartes;
+        estrategias[jugador].decidirEnvite = pasarEnvite;
     }
     return simularRondaMusConEstrategias(partida, estrategias);
 }

@@ -153,10 +153,17 @@ static void testSimularRondaMusConEstrategias(void) {
     for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++) {
         estrategias[jugador].decidirMus = darMusUnaVez;
         estrategias[jugador].elegirDescartes = descartarPrimera;
+        estrategias[jugador].decidirEnvite = decidirEnvitePrueba;
         estrategias[jugador].contexto = &contextos[jugador];
     }
+    contextos[0].acciones[0] =
+        (AccionEnviteMus){.tipo = ACCION_ENVIDAR, .cantidadTotal = 2};
+    contextos[0].numeroAcciones = 1;
+    contextos[1].acciones[0] = (AccionEnviteMus){.tipo = ACCION_QUERER};
+    contextos[1].numeroAcciones = 1;
     VERIFICAR(simularRondaMusConEstrategias(&partida, estrategias) == 0);
     VERIFICAR(partida.descartes.siguiente_carta == 4);
+    VERIFICAR(partida.envites_actuales.grande == 2);
     VERIFICAR(partida.mano == 1);
     VERIFICAR(destruirPartidaMus(&partida) == 0);
 }
