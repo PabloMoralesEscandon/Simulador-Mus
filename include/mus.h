@@ -139,6 +139,9 @@ int repartirManos(PartidaMus *partida);
 int manoSeDescarta(PartidaMus *partida, Mano *mano,
                    int descartadas[TAMANO_MANO_MUS]);
 
+/** Devuelve 1 si los cuatro jugadores dan mus, 0 si alguno corta, -1 si error. */
+int todosDanMus(const int decisiones[NUMERO_JUGADORES_MUS]);
+
 /** Suma tantos a la pareja del ganador del lance. Devuelve 1 o 2 si esa
  *  pareja alcanza los 40 tantos, 0 si la partida sigue. */
 int puntuarRonda(PartidaMus *partida, int ganador, int tantos);

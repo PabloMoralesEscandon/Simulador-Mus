@@ -110,6 +110,16 @@ static void testManoSeDescarta(void) {
     destruirPartidaMus(&partida);
 }
 
+static void testTodosDanMus(void) {
+    int todos[NUMERO_JUGADORES_MUS] = {1, 1, 1, 1};
+    int cortan[NUMERO_JUGADORES_MUS] = {1, 1, 0, 1};
+    int invalidas[NUMERO_JUGADORES_MUS] = {1, 1, 2, 1};
+    VERIFICAR(todosDanMus(NULL) == -1);
+    VERIFICAR(todosDanMus(todos) == 1);
+    VERIFICAR(todosDanMus(cortan) == 0);
+    VERIFICAR(todosDanMus(invalidas) == -1);
+}
+
 static void testRecicladoSinDuplicados(void) {
     PartidaMus partida;
     iniciarPartidaMus(&partida);
@@ -245,6 +255,7 @@ int main(void) {
     testIniciarDestruirPartida();
     testRepartirManos();
     testManoSeDescarta();
+    testTodosDanMus();
     testRecicladoSinDuplicados();
     testPuntuarPares();
     testPuntuarJuegoOPunto();

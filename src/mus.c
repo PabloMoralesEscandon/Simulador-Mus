@@ -471,6 +471,18 @@ int manoSeDescarta(PartidaMus *partida, Mano *mano,
     return 0;
 }
 
+int todosDanMus(const int decisiones[NUMERO_JUGADORES_MUS]) {
+    if (decisiones == NULL)
+        return -1;
+    for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++) {
+        if (decisiones[jugador] != 0 && decisiones[jugador] != 1)
+            return -1;
+        if (decisiones[jugador] == 0)
+            return 0;
+    }
+    return 1;
+}
+
 int puntuarRonda(PartidaMus *partida, int ganador, int tantos) {
     if (ganador == 0 || ganador == 2) {
         partida->tantos[0] += tantos;
