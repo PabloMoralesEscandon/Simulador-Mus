@@ -256,6 +256,33 @@ int parejaTieneJuego(Mano manos[NUMERO_JUGADORES_MUS], int pareja) {
     return tieneJuego(manos[pareja]) || tieneJuego(manos[pareja + 2]);
 }
 
+int puntuarJuegoOPunto(PartidaMus *partida) {
+    if (partida == NULL || partida->envites_actuales.juego > INT_MAX ||
+        partida->envites_actuales.punto > INT_MAX)
+        return -1;
+
+    int juego0 = parejaTieneJuego(partida->manos, 0);
+    int juego1 = parejaTieneJuego(partida->manos, 1);
+    if (juego0 || juego1) {
+        if (partida->envites_actuales.punto != 0)
+            return -1;
+        if ((!juego0 || !juego1) && partida->envites_actuales.juego != 0)
+            return -1;
+        int ganador = ganadorJuego(partida->manos, partida->mano);
+        int pareja = ganador % 2;
+        int tantos = tantosJuego(partida->manos[pareja]) +
+                     tantosJuego(partida->manos[pareja + 2]) +
+                     (int)partida->envites_actuales.juego;
+        return puntuarRonda(partida, ganador, tantos);
+    }
+
+    if (partida->envites_actuales.juego != 0)
+        return -1;
+    int ganador = ganadorPunto(partida->manos, partida->mano);
+    return puntuarRonda(partida, ganador,
+                        (int)partida->envites_actuales.punto + 1);
+}
+
 /** Posición del juego en ORDEN_PUNTO (mayor es mejor); -1 sin juego. */
 static int claveJuego(Mano mano) {
     int valor = sumaMano(mano);

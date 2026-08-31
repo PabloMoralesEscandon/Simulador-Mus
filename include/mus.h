@@ -103,6 +103,9 @@ int tantosJuego(Mano mano);
 /** Indica si algún jugador de la pareja 0 o 1 tiene juego; -1 si error. */
 int parejaTieneJuego(Mano manos[NUMERO_JUGADORES_MUS], int pareja);
 
+/** Puntúa juego o punto y su envite; 0, 1 o 2 si éxito, -1 si error. */
+int puntuarJuegoOPunto(PartidaMus *partida);
+
 /** Ganador del juego (orden 31 > 32 > 40 > 37 > ... > 33); si nadie
  *  llega a 31 el lance se decide al punto. */
 int ganadorJuego(Mano manos[NUMERO_JUGADORES_MUS], int mano);

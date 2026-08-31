@@ -163,6 +163,43 @@ static void testPuntuarPares(void) {
     destruirPartidaMus(&partida);
 }
 
+static void testPuntuarJuegoOPunto(void) {
+    VERIFICAR(puntuarJuegoOPunto(NULL) == -1);
+
+    PartidaMus partida;
+    iniciarPartidaMus(&partida);
+    for (int i = 0; i < NUMERO_JUGADORES_MUS; i++)
+        destruirMano(&partida.manos[i]);
+    partida.manos[0] = manoDe(REY, REY, REY, AS);       // 31: 3
+    partida.manos[1] = manoDe(REY, REY, REY, SIETE);    // 37: 2
+    partida.manos[2] = manoDe(REY, REY, SEIS, SEIS);    // 32: 2
+    partida.manos[3] = manoDe(REY, REY, SOTA, CABALLO); // 40: 2
+    partida.envites_actuales.juego = 4;
+    VERIFICAR(puntuarJuegoOPunto(&partida) == 0);
+    VERIFICAR(partida.tantos[0] == 9); // Envite 4 + 31 (3) + 32 (2)
+    VERIFICAR(partida.tantos[1] == 0);
+
+    partida.tantos[0] = 0;
+    partida.envites_actuales.juego = 0;
+    for (int i = 0; i < NUMERO_JUGADORES_MUS; i++) {
+        partida.manos[i].cartas[0].numero = AS;
+        partida.manos[i].cartas[1].numero = CUATRO;
+    }
+    partida.manos[0].cartas[2].numero = SIETE;
+    partida.manos[0].cartas[3].numero = SIETE; // 19
+    partida.manos[1].cartas[2].numero = SIETE;
+    partida.manos[1].cartas[3].numero = REY;   // 22
+    partida.manos[2].cartas[2].numero = SEIS;
+    partida.manos[2].cartas[3].numero = REY;   // 21
+    partida.manos[3].cartas[2].numero = SIETE;
+    partida.manos[3].cartas[3].numero = REY;   // 22, gana por mano
+    partida.envites_actuales.punto = 2;
+    VERIFICAR(puntuarJuegoOPunto(&partida) == 0);
+    VERIFICAR(partida.tantos[0] == 0);
+    VERIFICAR(partida.tantos[1] == 3); // Envite 2 + punto 1
+    destruirPartidaMus(&partida);
+}
+
 int main(void) {
     srand(88);
     testIniciarDestruirPartida();
@@ -170,5 +207,6 @@ int main(void) {
     testManoSeDescarta();
     testRecicladoSinDuplicados();
     testPuntuarPares();
+    testPuntuarJuegoOPunto();
     return resumenPruebas("test_partida");
 }
