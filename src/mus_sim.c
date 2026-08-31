@@ -59,12 +59,16 @@ int jugarFaseMus(PartidaMus *partida,
     }
 }
 
-int simularRondaMus(PartidaMus *partida) {
-    if (partida == NULL)
+int simularRondaMusConEstrategias(
+    PartidaMus *partida,
+    const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS]) {
+    if (partida == NULL || estrategias == NULL)
         return -1;
     if (reiniciarEnvitesRonda(&partida->envites_actuales))
         return -1;
     if (repartirManos(partida))
+        return -1;
+    if (jugarFaseMus(partida, estrategias))
         return -1;
     logManos(LOG_LANCES, partida);
     logGanadorLance(LOG_LANCES, "Grande",
@@ -100,6 +104,34 @@ int simularRondaMus(PartidaMus *partida) {
     logTantos(LOG_RONDAS, partida);
     partida->mano = (partida->mano + 1) % NUMERO_JUGADORES_MUS;
     return 0;
+}
+
+static int cortarMus(const Mano *mano, int jugador, int manoPartida,
+                     const int tantos[2], void *contexto) {
+    (void)mano;
+    (void)jugador;
+    (void)manoPartida;
+    (void)tantos;
+    (void)contexto;
+    return 0;
+}
+
+static int sinDescartes(const Mano *mano, int jugador,
+                        int descartadas[TAMANO_MANO_MUS], void *contexto) {
+    (void)mano;
+    (void)jugador;
+    (void)descartadas;
+    (void)contexto;
+    return 0;
+}
+
+int simularRondaMus(PartidaMus *partida) {
+    EstrategiaMus estrategias[NUMERO_JUGADORES_MUS] = {{0}};
+    for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++) {
+        estrategias[jugador].decidirMus = cortarMus;
+        estrategias[jugador].elegirDescartes = sinDescartes;
+    }
+    return simularRondaMusConEstrategias(partida, estrategias);
 }
 
 int simularPartidaMus() {

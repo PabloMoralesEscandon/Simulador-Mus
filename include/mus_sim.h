@@ -44,6 +44,11 @@ int jugarFaseMus(PartidaMus *partida,
  *  error. */
 int simularRondaMus(PartidaMus *partida);
 
+/** Juega una ronda usando estrategias para decidir mus y descartes. */
+int simularRondaMusConEstrategias(
+    PartidaMus *partida,
+    const EstrategiaMus estrategias[NUMERO_JUGADORES_MUS]);
+
 /** Simula una partida completa a 40 tantos, logueando el progreso. */
 int simularPartidaMus();
 

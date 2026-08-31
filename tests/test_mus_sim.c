@@ -73,6 +73,7 @@ static void testJugarFaseMus(void) {
 
 static void testSimularRondaMus(void) {
     VERIFICAR(simularRondaMus(NULL) == -1);
+    VERIFICAR(simularRondaMusConEstrategias(NULL, NULL) == -1);
 
     PartidaMus partida = {0};
     VERIFICAR(iniciarPartidaMus(&partida) == 0);
@@ -95,6 +96,23 @@ static void testSimularRondaMus(void) {
     VERIFICAR(partida.envites_actuales.punto == 0);
     for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++)
         VERIFICAR(partida.manos[jugador].tamano == TAMANO_MANO_MUS);
+    VERIFICAR(destruirPartidaMus(&partida) == 0);
+}
+
+static void testSimularRondaMusConEstrategias(void) {
+    PartidaMus partida = {0};
+    VERIFICAR(iniciarPartidaMus(&partida) == 0);
+    VERIFICAR(resetearMazo(&partida) == 0);
+    ContextoMusPrueba contextos[NUMERO_JUGADORES_MUS] = {{0}};
+    EstrategiaMus estrategias[NUMERO_JUGADORES_MUS] = {{0}};
+    for (int jugador = 0; jugador < NUMERO_JUGADORES_MUS; jugador++) {
+        estrategias[jugador].decidirMus = darMusUnaVez;
+        estrategias[jugador].elegirDescartes = descartarPrimera;
+        estrategias[jugador].contexto = &contextos[jugador];
+    }
+    VERIFICAR(simularRondaMusConEstrategias(&partida, estrategias) == 0);
+    VERIFICAR(partida.descartes.siguiente_carta == 4);
+    VERIFICAR(partida.mano == 1);
     VERIFICAR(destruirPartidaMus(&partida) == 0);
 }
 
@@ -242,6 +260,7 @@ int main(void) {
     srand(42);
     testJugarFaseMus();
     testSimularRondaMus();
+    testSimularRondaMusConEstrategias();
     testPartidaPorRondas();
     testSimularPartidaMus();
     testProbabilidadesCasosSeguros();
