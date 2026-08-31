@@ -97,6 +97,9 @@ int tieneJuego(Mano mano);
 /** Tantos por el valor intrínseco del juego: 3 por 31, 2 por otro juego. */
 int tantosJuego(Mano mano);
 
+/** Indica si algún jugador de la pareja 0 o 1 tiene juego; -1 si error. */
+int parejaTieneJuego(Mano manos[NUMERO_JUGADORES_MUS], int pareja);
+
 /** Ganador del juego (orden 31 > 32 > 40 > 37 > ... > 33); si nadie
  *  llega a 31 el lance se decide al punto. */
 int ganadorJuego(Mano manos[NUMERO_JUGADORES_MUS], int mano);

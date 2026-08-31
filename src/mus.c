@@ -230,6 +230,12 @@ int tantosJuego(Mano mano) {
     return 0;
 }
 
+int parejaTieneJuego(Mano manos[NUMERO_JUGADORES_MUS], int pareja) {
+    if (manos == NULL || pareja < 0 || pareja > 1)
+        return -1;
+    return tieneJuego(manos[pareja]) || tieneJuego(manos[pareja + 2]);
+}
+
 /** Posición del juego en ORDEN_PUNTO (mayor es mejor); -1 sin juego. */
 static int claveJuego(Mano mano) {
     int valor = sumaMano(mano);

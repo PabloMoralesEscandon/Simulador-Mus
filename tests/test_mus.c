@@ -154,6 +154,8 @@ static void testPar(void) {
 }
 
 static void testPunto(void) {
+    VERIFICAR(parejaTieneJuego(NULL, 0) == -1);
+
     // 31 es la mejor jugada
     Mano manos[NUMERO_JUGADORES_MUS] = {
         manoDe(REY, REY, SEIS, SEIS),      // 32
@@ -167,6 +169,10 @@ static void testPunto(void) {
     VERIFICAR(tantosJuego(manos[1]) == 3);
     VERIFICAR(tantosJuego(manos[2]) == 2);
     VERIFICAR(tantosJuego(manos[3]) == 2);
+    VERIFICAR(parejaTieneJuego(manos, -1) == -1);
+    VERIFICAR(parejaTieneJuego(manos, 2) == -1);
+    VERIFICAR(parejaTieneJuego(manos, 0) == 1);
+    VERIFICAR(parejaTieneJuego(manos, 1) == 1);
     VERIFICAR(ganadorJuego(manos, 0) == 1);
     liberarManos(manos);
 
@@ -191,6 +197,8 @@ static void testPunto(void) {
     VERIFICAR(tieneJuego(manos3[1]));
     VERIFICAR(tantosJuego(manos3[0]) == 0);
     VERIFICAR(tantosJuego(manos3[1]) == 3);
+    VERIFICAR(parejaTieneJuego(manos3, 0) == 0);
+    VERIFICAR(parejaTieneJuego(manos3, 1) == 1);
     VERIFICAR(ganadorJuego(manos3, 0) == 1);
     VERIFICAR(ganadorJuego(manos3, 2) == 3);
     liberarManos(manos3);
