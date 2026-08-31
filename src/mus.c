@@ -405,6 +405,23 @@ int noQuererEnviteMus(EnviteMus *envite, int pareja) {
     return 0;
 }
 
+int ordagoMus(EnviteMus *envite, int pareja) {
+    if (envite == NULL || pareja < 0 || pareja > 1)
+        return 1;
+    if (envite->estado == ENVITE_AL_PASO) {
+        envite->cantidadAnterior = 1;
+    } else if (envite->estado == ENVITE_PENDIENTE) {
+        if (pareja == envite->parejaApostadora)
+            return 1;
+        envite->cantidadAnterior = envite->cantidad;
+    } else {
+        return 1;
+    }
+    envite->estado = ORDAGO_PENDIENTE;
+    envite->parejaApostadora = pareja;
+    return 0;
+}
+
 int iniciarPartidaMus(PartidaMus *partida) {
     if (partida == NULL)
         return 1;

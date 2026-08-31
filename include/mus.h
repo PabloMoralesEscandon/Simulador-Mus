@@ -87,6 +87,9 @@ int quererEnviteMus(EnviteMus *envite, int pareja);
 /** Rechaza el envite u órdago pendiente desde la pareja contraria. */
 int noQuererEnviteMus(EnviteMus *envite, int pareja);
 
+/** Abre un órdago o lo usa para responder al envite contrario. */
+int ordagoMus(EnviteMus *envite, int pareja);
+
 /** Reserva una mano de TAMANO_MANO_MUS cartas. */
 int crearManoMus(Mano *mano);
 
