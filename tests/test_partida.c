@@ -302,6 +302,25 @@ static void testRecicladoSinDuplicados(void) {
     destruirPartidaMus(&partida);
 }
 
+static void testResetearMazo(void) {
+    VERIFICAR(resetearMazo(NULL) == 1);
+    PartidaMus partida;
+    iniciarPartidaMus(&partida);
+    barajar(&partida.baraja);
+    repartirManos(&partida);
+    int descartadas[NUMERO_JUGADORES_MUS][TAMANO_MANO_MUS] = {
+        {1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}};
+    VERIFICAR(descartarManosMus(&partida, descartadas) == 0);
+    VERIFICAR(partida.descartes.siguiente_carta > 0);
+    VERIFICAR(resetearMazo(&partida) == 0);
+    VERIFICAR(partida.baraja.tamano == 40);
+    VERIFICAR(partida.baraja.siguiente_carta == 0);
+    VERIFICAR(partida.descartes.siguiente_carta == 0);
+    VERIFICAR(repartirManos(&partida) == 0);
+    VERIFICAR(duplicadosEnManos(&partida) == 0);
+    destruirPartidaMus(&partida);
+}
+
 static void testPuntuarPares(void) {
     VERIFICAR(puntuarPares(NULL) == -1);
 
@@ -467,6 +486,7 @@ int main(void) {
     testTodosDanMus();
     testDescartarManosMus();
     testRecicladoSinDuplicados();
+    testResetearMazo();
     testPuntuarPares();
     testPuntuarParesDePareja();
     testPuntuarJuegoOPunto();

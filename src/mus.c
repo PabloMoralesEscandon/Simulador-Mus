@@ -719,7 +719,19 @@ int puntuarRonda(PartidaMus *partida, int ganador, int tantos) {
 int resetearMazo(PartidaMus *partida) {
     if (partida == NULL)
         return 1;
-    barajar(&(partida->baraja));
-    partida->baraja.siguiente_carta = 0;
+    Baraja baraja = {0};
+    if (crearBarajaEspanola40(&baraja))
+        return 1;
+    if (barajar(&baraja)) {
+        destruirBaraja(&baraja);
+        return 1;
+    }
+    if (destruirBaraja(&partida->baraja)) {
+        destruirBaraja(&baraja);
+        return 1;
+    }
+    partida->baraja = baraja;
+    partida->descartes.tamano = 40;
+    partida->descartes.siguiente_carta = 0;
     return 0;
 }
